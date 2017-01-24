@@ -1,0 +1,23 @@
+{
+  "name": "arroios/mapasculturais-pluginFB",
+  "description": "Api para importar eventos do facebook",
+  "keywords": ["php", "extension", "plugin", "mapas culturais"],
+  "homepage": "https://github.com/arroios/mapasculturais-pluginFB",
+  "type": "php-extension",
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "André Martins",
+      "email": "jhansonpk@hotmail.com",
+      "homepage": "https://github.com/jhansonpk"
+    }
+  ],
+  "require": {
+    "facebook/graph-sdk" : "~5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "arroios\\plugins\\": ""
+    }
+  }
+}

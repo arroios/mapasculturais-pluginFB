@@ -6,3 +6,5 @@
 out
 gen
 /vendor
+/test
+db/plugin.sqlite

@@ -7,13 +7,14 @@ use Facebook\Exceptions\FacebookResponseException;
 use Facebook\Exceptions\FacebookSDKException;
 use Facebook\FacebookApp;
 use arroios\plugins\models\Page;
+use arroios\plugins\models\Event;
 
 Class Facebook
 {
     public $fb;
     public $facebook_id;
     public $facebook_secret;
-    public $facebook_permissions = ['email', 'publish_pages'];
+    public $facebook_permissions = ['email', 'publish_pages', 'manage_pages'];
 
     public $token = false;
 
@@ -42,7 +43,7 @@ Class Facebook
     {
         $signal = (strpos($_SERVER['REQUEST_URI'], '?') > 0) ? '&' : '?';
         // pega o link
-        $link = $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].$signal.'action=login';
+        $link = $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].$signal.'plugin-facebook-action=login';
 
         $helper = $this->fb->getRedirectLoginHelper();
 
@@ -52,8 +53,20 @@ Class Facebook
         return $loginUrl;
     }
 
+    /**
+     * @param $config
+     * @return array
+     *
+     *
+     *
+     * GET /oauth/access_token?
+    grant_type=fb_exchange_token&amp;
+    client_id={app-id}&amp;
+    client_secret={app-secret}&amp;
+    fb_exchange_token={short-lived-token}
+     */
 
-    public function login()
+    public function login($config)
     {
         $error = false;
 
@@ -76,8 +89,18 @@ Class Facebook
                     // Get the access token metadata from /debug_token
                     $tokenMetadata = $oAuth2Client->debugToken($accessToken);
 
-                    $this->token = @$accessToken->getValue();
-                    $pages = $this->getPages(current($tokenMetadata)['user_id']);
+
+
+                    $fbApp = new FacebookApp($this->facebook_id, $this->facebook_secret);
+                    $requestAccount = new FacebookRequest($fbApp, $accessToken->getValue(), 'GET', '/oauth/access_token', [
+                        'grant_type' => 'fb_exchange_token',
+                        'fb_exchange_token' => $accessToken->getValue(),
+                        'client_id' => $this->facebook_id,
+                        'client_secret' => $this->facebook_secret
+                    ]);
+
+                    $this->token = $this->fb->getClient()->sendRequest($requestAccount)->getDecodedBody()['access_token'];
+                    $pages = $this->getPages($config, current($tokenMetadata)['user_id']);
 
                 }
             }
@@ -97,7 +120,7 @@ Class Facebook
     }
 
 
-    private function getPages($userId)
+    public function getPages($config, $userId)
     {
         try
         {
@@ -113,7 +136,7 @@ Class Facebook
             $pages = [];
             foreach ($dataAccount as $value)
             {
-                $pages[] = new Page($value, $userId);
+                $pages[] = new Page($config['Page'], $value);
             }
 
             return [
@@ -121,6 +144,43 @@ Class Facebook
                 'pages' => $pages
             ];
 
+        }
+        catch(FacebookResponseException $e)
+        {
+            return false;
+        }
+    }
+
+    public function getEvents($config, $page)
+    {
+        try
+        {
+            $page = new Page($config['Page'], $page);
+            $page->create();
+
+
+            $fbApp = new FacebookApp($this->facebook_id, $this->facebook_secret);
+
+            $requestAccount = new FacebookRequest($fbApp, $page->facebookToken, 'GET', '/'.$page->facebookPageId.'/events', [
+                'fields' => 'start_time,end_time,name,description,id,updated_time,cover,place',
+                'limit' => '100'
+            ]);
+
+            $data = $this->fb->getClient()->sendRequest($requestAccount)->getDecodedBody()['data'];
+
+            $events = [];
+            foreach ($data as $value)
+            {
+                $__temp = new Event($config['Event'], $value, $page->facebookPageId);
+                $__temp->create();
+
+                $events[] = $__temp;
+            }
+
+            return [
+                'pageId' => $page->facebookPageId,
+                'events' => $events
+            ];
         }
         catch(FacebookResponseException $e)
         {

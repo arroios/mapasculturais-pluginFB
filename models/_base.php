@@ -5,25 +5,16 @@ use arroios\plugins\Database;
 
 Class _base
 {
-    public function verify($id, $table)
+    public function verify($id, $tableName, $columnId)
     {
         $conn = Database::getConnection();
-        $query = $conn->prepare("SELECT id FROM {$table} WHERE id = :id");
+        $query = $conn->prepare("SELECT * FROM {$tableName} WHERE :columnId = :id");
+        $query->bindColumn(':columnId', $columnId);
         $query->bindParam(':id', $id);
 
         $query->execute();
 
         $query->setFetchMode(\PDO::FETCH_ASSOC);
-
-        if($query->fetch() == false)
-        {
-            $conn = Database::getConnection();
-            $sql = "INSERT INTO tags (id, name) VALUES (:name, :color)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bindParam(':name', $name);
-            $stmt->bindParam(':color', $color);
-            $stmt->execute();
-        }
 
         return $query->fetch();
     }

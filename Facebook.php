@@ -53,18 +53,6 @@ Class Facebook
         return $loginUrl;
     }
 
-    /**
-     * @param $config
-     * @return array
-     *
-     *
-     *
-     * GET /oauth/access_token?
-    grant_type=fb_exchange_token&amp;
-    client_id={app-id}&amp;
-    client_secret={app-secret}&amp;
-    fb_exchange_token={short-lived-token}
-     */
 
     public function login($config)
     {
@@ -72,11 +60,11 @@ Class Facebook
 
         if(isset($_GET['code']) && $_GET['state']) {
 
-            $helper = $this->fb->getRedirectLoginHelper();
-
             try
             {
+                $helper = $this->fb->getRedirectLoginHelper();
                 $accessToken = $helper->getAccessToken();
+
                 if (!isset($accessToken))
                 {
                     $error = 'Bad request';
@@ -106,8 +94,7 @@ Class Facebook
             }
             catch (FacebookResponseException $e)
             {
-                // When Graph returns an error
-                $error = 'Graph returned an error: ' . $e->getMessage();
+                return false;
             }
         }
 
@@ -136,7 +123,9 @@ Class Facebook
             $pages = [];
             foreach ($dataAccount as $value)
             {
-                $pages[] = new Page($config['Page'], $value);
+                $page = new Page($config['Page']);
+                $page->load($value);
+                $pages[] = $page->getInfo();
             }
 
             return [
@@ -151,11 +140,12 @@ Class Facebook
         }
     }
 
-    public function getEvents($config, $page)
+    public function getEvents($config, $pageData)
     {
         try
         {
-            $page = new Page($config['Page'], $page);
+            $page = new Page($config['Page']);
+            $page->load($pageData);
             $page->create();
 
 
@@ -171,10 +161,11 @@ Class Facebook
             $events = [];
             foreach ($data as $value)
             {
-                $__temp = new Event($config['Event'], $value, $page->facebookPageId);
+                $__temp = new Event($config['Event']);
+                $__temp->load($value, $page->facebookPageId);
                 $__temp->create();
 
-                $events[] = $__temp;
+                $events[] = $__temp->getInfo();
             }
 
             return [

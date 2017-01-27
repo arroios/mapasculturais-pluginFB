@@ -39,25 +39,8 @@ Class Event extends _base
     public $columnLatitude = 'latitude';
     public $columnLongitude = 'longitude';
 
-    public function __construct($config, $data, $pageId)
+    public function __construct($config)
     {
-        $this->facebookEventId = $data['id'];
-        $this->columnFacebookPageId = $pageId;
-        $this->facebookEventUpdateTime = $data['updated_time'];
-        $this->startTime = $data['start_time'];
-        $this->endTime = $data['end_time'];
-        $this->name = $data['name'];
-        $this->description = $data['description'];
-        $this->cover = $data['cover']['source'];
-        $this->place = $data['place']['name'];
-        $this->state = $data['place']['location']['state'];
-        $this->city = $data['place']['location']['city'];
-        $this->street = $data['place']['location']['street'];
-        $this->zip = $data['place']['location']['zip'];
-        $this->latitude = $data['place']['location']['latitude'];
-        $this->longitude = $data['place']['location']['longitude'];
-
-
         if(isset($config['tableName'])) $this->tableName = $config['tableName'];
         if(isset($config['columnFacebookEventId'])) $this->columnFacebookEventId = $config['columnFacebookEventId'];
         if(isset($config['columnFacebookPageId'])) $this->columnFacebookPageId = $config['columnFacebookPageId'];
@@ -76,6 +59,61 @@ Class Event extends _base
         if(isset($config['columnLongitude'])) $this->columnLongitude = $config['columnLongitude'];
 
     }
+
+    public function load($data, $pageId)
+    {
+        $this->facebookEventId = @$data['id'];
+        $this->facebookPageId = $pageId;
+        $this->facebookEventUpdateTime = @$data['updated_time'];
+        $this->startTime = @$data['start_time'];
+        $this->endTime = @$data['end_time'];
+        $this->name = @$data['name'];
+        $this->description = @$data['description'];
+        $this->cover = @$data['cover']['source'];
+        $this->place = @$data['place']['name'];
+        $this->state = @$data['place']['location']['state'];
+        $this->city = @$data['place']['location']['city'];
+        $this->street = @$data['place']['location']['street'];
+        $this->zip = @$data['place']['location']['zip'];
+        $this->latitude = @$data['place']['location']['latitude'];
+        $this->longitude = @$data['place']['location']['longitude'];
+    }
+
+    public function getListOwnPage($pageId)
+    {
+        $conn = Database::getConnection();
+        $query = $conn->prepare("SELECT * FROM {$this->tableName} WHERE {$this->columnFacebookPageId} = :pageId");
+        //$query->bindColumn(':columnId', $columnId);
+        $query->bindParam(':pageId', $pageId);
+
+        $query->execute();
+
+        $query->setFetchMode(\PDO::FETCH_ASSOC);
+
+        return $query->fetchAll();
+    }
+
+    public function getInfo()
+    {
+        return (Object)[
+            'facebookEventId' => $this->facebookEventId,
+            'columnFacebookPageId' => $this->columnFacebookPageId,
+            'facebookEventUpdateTime' => $this->facebookEventUpdateTime,
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+            'name' => $this->name,
+            'description' => $this->description,
+            'cover' => $this->cover,
+            'place' => $this->place,
+            'state' => $this->state,
+            'city' => $this->city,
+            'street' => $this->street,
+            'zip' => $this->zip,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+        ];
+    }
+
 
     public function create()
     {
@@ -115,23 +153,8 @@ Class Event extends _base
               :latitude,
               :longitude
               )";
-            $stmt = $conn->prepare($sql);
 
-            $stmt->bindColumn(':columnFacebookEventId', $this->columnFacebookEventId);
-            $stmt->bindColumn(':columnFacebookPageId', $this->columnFacebookPageId);
-            $stmt->bindColumn(':columnFacebookEventUpdateTime', $this->columnFacebookEventUpdateTime);
-            $stmt->bindColumn(':columnStartTime', $this->columnStartTime);
-            $stmt->bindColumn(':columnEndTime', $this->columnEndTime);
-            $stmt->bindColumn(':columnName', $this->columnName);
-            $stmt->bindColumn(':columnDescription', $this->columnDescription);
-            $stmt->bindColumn(':columnCover', $this->columnCover);
-            $stmt->bindColumn(':columnPlace', $this->columnPlace);
-            $stmt->bindColumn(':columnState', $this->columnState);
-            $stmt->bindColumn(':columnCity', $this->columnCity);
-            $stmt->bindColumn(':columnStreet', $this->columnStreet);
-            $stmt->bindColumn(':columnZip', $this->columnZip);
-            $stmt->bindColumn(':columnLatitude', $this->columnLatitude);
-            $stmt->bindColumn(':columnLongitude', $this->columnLongitude);
+            $stmt = $conn->prepare($sql);
 
             $stmt->bindParam(':facebookEventId', $this->facebookEventId);
             $stmt->bindParam(':facebookPageId', $this->facebookPageId);

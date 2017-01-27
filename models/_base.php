@@ -8,8 +8,8 @@ Class _base
     public function verify($id, $tableName, $columnId)
     {
         $conn = Database::getConnection();
-        $query = $conn->prepare("SELECT * FROM {$tableName} WHERE :columnId = :id");
-        $query->bindColumn(':columnId', $columnId);
+        $query = $conn->prepare("SELECT * FROM {$tableName} WHERE {$columnId} = :id");
+        //$query->bindColumn(':columnId', $columnId);
         $query->bindParam(':id', $id);
 
         $query->execute();
@@ -23,6 +23,4 @@ Class _base
     {
         // grava na base de dados
     }
-
-
 }

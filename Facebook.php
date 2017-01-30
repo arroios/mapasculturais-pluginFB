@@ -11,13 +11,16 @@ use arroios\plugins\models\Event;
 
 Class Facebook
 {
-    public $fb;
-    public $facebook_id;
-    public $facebook_secret;
-    public $facebook_permissions = ['email', 'publish_pages', 'manage_pages'];
+    private $fb;
+    private $facebook_id;
+    private $facebook_secret;
+    private $facebook_permissions = ['email', 'publish_pages', 'manage_pages'];
+    private $token = false;
 
-    public $token = false;
-
+    /**
+     * Facebook constructor.
+     * @param $conf
+     */
     function __construct($conf)
     {
         if(!session_id()) {
@@ -38,26 +41,33 @@ Class Facebook
 
     }
 
-
-    public function getLinkToLogin()
+    /**
+     * @return string
+     */
+    protected function getLinkToLogin()
     {
+        // Verifica se utiliza ? ou &
         $signal = (strpos($_SERVER['REQUEST_URI'], '?') > 0) ? '&' : '?';
-        // pega o link
-        $link = $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].$signal.'plugin-facebook-action=login';
+        // Monta o link
+        $link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].$signal.'plugin-facebook-action=login';
+        // Permissões do facebook
+        $permissions = $this->facebook_permissions;
 
         $helper = $this->fb->getRedirectLoginHelper();
-
-        $permissions = $this->facebook_permissions; // Optional permissions
         $loginUrl = $helper->getLoginUrl($link, $permissions);
 
         return $loginUrl;
     }
 
-
-    public function login($config)
+    /**
+     * @param $conf
+     * @return array|bool
+     */
+    protected function login($conf)
     {
         $error = false;
 
+        // Verifica se a chamada na URL esta correta
         if(isset($_GET['code']) && $_GET['state']) {
 
             try
@@ -71,12 +81,8 @@ Class Facebook
                 }
                 else
                 {
-                    // The OAuth 2.0 client handler helps us manage access tokens
                     $oAuth2Client = $this->fb->getOAuth2Client();
-
-                    // Get the access token metadata from /debug_token
                     $tokenMetadata = $oAuth2Client->debugToken($accessToken);
-
 
 
                     $fbApp = new FacebookApp($this->facebook_id, $this->facebook_secret);
@@ -88,7 +94,7 @@ Class Facebook
                     ]);
 
                     $this->token = $this->fb->getClient()->sendRequest($requestAccount)->getDecodedBody()['access_token'];
-                    $pages = $this->getPages($config, current($tokenMetadata)['user_id']);
+                    $pages = $this->getPages($conf, current($tokenMetadata)['user_id']);
 
                 }
             }
@@ -106,8 +112,12 @@ Class Facebook
         ];
     }
 
-
-    public function getPages($config, $userId)
+    /**
+     * @param $conf
+     * @param $userId
+     * @return array|bool
+     */
+    protected function getPages($conf, $userId)
     {
         try
         {
@@ -120,11 +130,15 @@ Class Facebook
 
             $dataAccount = $this->fb->getClient()->sendRequest($requestAccount)->getDecodedBody()['data'];
 
+            // Percorre pela conta do usuário
             $pages = [];
             foreach ($dataAccount as $value)
             {
-                $page = new Page($config['Page']);
-                $page->load($value);
+                // Instacia uma nova página
+                $page = new Page($conf['Page']);
+                // Carrega os dados no model
+                $page->load($value, 'facebook');
+                // Puxa as informações e joga na variável
                 $pages[] = $page->getInfo();
             }
 
@@ -140,13 +154,21 @@ Class Facebook
         }
     }
 
-    public function getEvents($config, $pageData)
+    /**
+     * @param $conf
+     * @param $pageData
+     * @return array|bool
+     */
+    protected function getEvents($conf, $pageData)
     {
         try
         {
-            $page = new Page($config['Page']);
-            $page->load($pageData);
-            $page->create();
+            // Instacia uma nova página
+            $page = new Page($conf['Page']);
+            // Carrega os dados no model
+            $page->load($pageData, 'model');
+            // Salva esta página
+            $page->save();
 
 
             $fbApp = new FacebookApp($this->facebook_id, $this->facebook_secret);
@@ -158,13 +180,18 @@ Class Facebook
 
             $data = $this->fb->getClient()->sendRequest($requestAccount)->getDecodedBody()['data'];
 
+            // Percorre pelos eventos desta página
             $events = [];
             foreach ($data as $value)
             {
-                $__temp = new Event($config['Event']);
+                // Instacia um novo evento
+                $__temp = new Event($conf['Event']);
+                // Carrega os dados no model
                 $__temp->load($value, $page->facebookPageId);
-                $__temp->create();
+                // Salva este evento
+                $__temp->save();
 
+                // Puxa as informações e joga na variável
                 $events[] = $__temp->getInfo();
             }
 

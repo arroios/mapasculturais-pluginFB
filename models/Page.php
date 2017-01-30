@@ -4,6 +4,10 @@ namespace arroios\plugins\models;
 
 use arroios\plugins\Database;
 
+/**
+ * Class Page
+ * @package arroios\plugins\models
+ */
 Class Page extends _base
 {
     public $facebookPageId;
@@ -15,6 +19,10 @@ Class Page extends _base
     public $columnFacebookToken = 'facebookToken';
     public $columnFacebookPageName = 'facebookPageName';
 
+    /**
+     * Page constructor.
+     * @param $config
+     */
     public function __construct($config)
     {
         if(isset($config['tableName'])) $this->tableName = $config['tableName'];
@@ -23,13 +31,20 @@ Class Page extends _base
         if(isset($config['columnFacebookPageName'])) $this->columnFacebookPageName = $config['columnFacebookPageName'];
     }
 
-    public function load($data)
+    /**
+     * @param $data
+     * @param $target
+     */
+    public function load($data, $target)
     {
-        $this->facebookPageId = @$data['id'];
-        $this->facebookToken = @$data['access_token'];
-        $this->facebookPageName = @$data['name'];
+        $this->facebookPageId = $target == 'facebook' ? $data['id'] : $data[$this->columnFacebookPageId];
+        $this->facebookToken = $target == 'facebook' ? $data['access_token'] : $data[$this->columnFacebookToken];
+        $this->facebookPageName = $target == 'facebook' ? $data['name'] : $data[$this->columnFacebookPageName];
     }
 
+    /**
+     * @return array
+     */
     public function getList()
     {
         $conn = Database::getConnection();
@@ -42,16 +57,22 @@ Class Page extends _base
         return $query->fetchAll();
     }
 
+    /**
+     * @return object
+     */
     public function getInfo()
     {
         return (Object)[
-            'id' => $this->facebookPageId,
-            'access_token' => $this->facebookToken,
-            'name' => $this->facebookPageName
+            $this->columnFacebookPageId => $this->facebookPageId,
+            $this->columnFacebookToken => $this->facebookToken,
+            $this->columnFacebookPageName => $this->facebookPageName
         ];
     }
 
-    public function create()
+    /**
+     * @return mixed
+     */
+    public function save()
     {
         if($this->verify($this->facebookPageId, $this->tableName, $this->columnFacebookPageId) == false)
         {
@@ -72,6 +93,10 @@ Class Page extends _base
             $stmt->bindParam(':facebookPageName', $this->facebookPageName);
 
             $stmt->execute();
+
+            $stmt->setFetchMode(\PDO::FETCH_ASSOC);
+
+            return $stmt->fetch();
         }
     }
 

@@ -3,8 +3,18 @@ namespace arroios\plugins\models;
 
 use arroios\plugins\Database;
 
+/**
+ * Class _base
+ * @package arroios\plugins\models
+ */
 Class _base
 {
+    /**
+     * @param $id
+     * @param $tableName
+     * @param $columnId
+     * @return mixed
+     */
     public function verify($id, $tableName, $columnId)
     {
         $conn = Database::getConnection();
@@ -17,10 +27,5 @@ Class _base
         $query->setFetchMode(\PDO::FETCH_ASSOC);
 
         return $query->fetch();
-    }
-
-    public function save()
-    {
-        // grava na base de dados
     }
 }

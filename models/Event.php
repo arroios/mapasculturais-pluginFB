@@ -4,6 +4,10 @@ namespace arroios\plugins\models;
 
 use arroios\plugins\Database;
 
+/**
+ * Class Event
+ * @package arroios\plugins\models
+ */
 Class Event extends _base
 {
     public $facebookEventId;
@@ -39,6 +43,10 @@ Class Event extends _base
     public $columnLatitude = 'latitude';
     public $columnLongitude = 'longitude';
 
+    /**
+     * Event constructor.
+     * @param $config
+     */
     public function __construct($config)
     {
         if(isset($config['tableName'])) $this->tableName = $config['tableName'];
@@ -60,6 +68,10 @@ Class Event extends _base
 
     }
 
+    /**
+     * @param $data
+     * @param $pageId
+     */
     public function load($data, $pageId)
     {
         $this->facebookEventId = @$data['id'];
@@ -79,6 +91,10 @@ Class Event extends _base
         $this->longitude = @$data['place']['location']['longitude'];
     }
 
+    /**
+     * @param $pageId
+     * @return array
+     */
     public function getListOwnPage($pageId)
     {
         $conn = Database::getConnection();
@@ -93,6 +109,9 @@ Class Event extends _base
         return $query->fetchAll();
     }
 
+    /**
+     * @return object
+     */
     public function getInfo()
     {
         return (Object)[
@@ -114,65 +133,134 @@ Class Event extends _base
         ];
     }
 
+    /**
+     * @return mixed
+     */
+    public function save()
+    {
+        $existEvent = $this->verify($this->facebookEventId, $this->tableName, $this->columnFacebookEventId);
+        if($existEvent == false)
+        {
+            return $this->create();
+        }
+        else if ($existEvent[$this->columnFacebookEventUpdateTime] != $this->facebookEventUpdateTime)
+        {
+            return $this->update();
+        }
+    }
 
+    /**
+     * @return mixed
+     */
+    public function update()
+    {
+        $conn = Database::getConnection();
+        $sql = " UPDATE {$this->tableName} SET
+        {$this->columnFacebookEventUpdateTime} = :facebookEventUpdateTime, 
+        {$this->columnStartTime} = :start_time, 
+        {$this->columnEndTime} = :end_time, 
+        {$this->columnName} = :name, 
+        {$this->columnDescription} = :description,
+        {$this->columnCover} = :cover,
+        {$this->columnPlace} = :place,
+        {$this->columnState} = :state,
+        {$this->columnCity} = :city,
+        {$this->columnStreet} = :street,
+        {$this->columnZip} = :zip,
+        {$this->columnLatitude} = :latitude,
+        {$this->columnLongitude} = :longitude
+        
+        WHERE {$this->columnFacebookEventId} =  :facebookEventId
+        ";
+
+        $stmt = $conn->prepare($sql);
+
+        $stmt->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
+        $stmt->bindParam(':start_time', $this->startTime);
+        $stmt->bindParam(':end_time', $this->endTime);
+        $stmt->bindParam(':name', $this->name);
+        $stmt->bindParam(':description', $this->description);
+        $stmt->bindParam(':cover', $this->cover);
+        $stmt->bindParam(':place', $this->place);
+        $stmt->bindParam(':state', $this->state);
+        $stmt->bindParam(':city', $this->city);
+        $stmt->bindParam(':street', $this->street);
+        $stmt->bindParam(':zip', $this->zip);
+        $stmt->bindParam(':latitude', $this->latitude);
+        $stmt->bindParam(':longitude', $this->longitude);
+        $stmt->bindParam(':facebookEventId', $this->facebookEventId);
+
+        $stmt->execute();
+
+        $stmt->setFetchMode(\PDO::FETCH_ASSOC);
+
+        return $stmt->fetch();
+    }
+
+    /**
+     * @return mixed
+     */
     public function create()
     {
-        if($this->verify($this->facebookEventId, $this->tableName, $this->columnFacebookEventId) == false)
-        {
-            $conn = Database::getConnection();
-            $sql = "INSERT INTO {$this->tableName} (
-              {$this->columnFacebookEventId}, 
-              {$this->columnFacebookPageId}, 
-              {$this->columnFacebookEventUpdateTime}, 
-              {$this->columnStartTime}, 
-              {$this->columnEndTime}, 
-              {$this->columnName},
-              {$this->columnDescription},
-              {$this->columnCover},
-              {$this->columnPlace},
-              {$this->columnState},
-              {$this->columnCity},
-              {$this->columnStreet},
-              {$this->columnZip},
-              {$this->columnLatitude},
-              {$this->columnLongitude}
-              ) VALUES (
-              :facebookEventId, 
-              :facebookPageId, 
-              :facebookEventUpdateTime, 
-              :start_time, 
-              :end_time, 
-              :name, 
-              :description,
-              :cover,
-              :place,
-              :state,
-              :city,
-              :street,
-              :zip,
-              :latitude,
-              :longitude
-              )";
 
-            $stmt = $conn->prepare($sql);
+        $conn = Database::getConnection();
+        $sql = "INSERT INTO {$this->tableName} (
+          {$this->columnFacebookEventId}, 
+          {$this->columnFacebookPageId}, 
+          {$this->columnFacebookEventUpdateTime}, 
+          {$this->columnStartTime}, 
+          {$this->columnEndTime}, 
+          {$this->columnName},
+          {$this->columnDescription},
+          {$this->columnCover},
+          {$this->columnPlace},
+          {$this->columnState},
+          {$this->columnCity},
+          {$this->columnStreet},
+          {$this->columnZip},
+          {$this->columnLatitude},
+          {$this->columnLongitude}
+          ) VALUES (
+          :facebookEventId, 
+          :facebookPageId, 
+          :facebookEventUpdateTime, 
+          :start_time, 
+          :end_time, 
+          :name, 
+          :description,
+          :cover,
+          :place,
+          :state,
+          :city,
+          :street,
+          :zip,
+          :latitude,
+          :longitude
+          )";
 
-            $stmt->bindParam(':facebookEventId', $this->facebookEventId);
-            $stmt->bindParam(':facebookPageId', $this->facebookPageId);
-            $stmt->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
-            $stmt->bindParam(':start_time', $this->startTime);
-            $stmt->bindParam(':end_time', $this->endTime);
-            $stmt->bindParam(':name', $this->name);
-            $stmt->bindParam(':description', $this->description);
-            $stmt->bindParam(':cover', $this->cover);
-            $stmt->bindParam(':place', $this->place);
-            $stmt->bindParam(':state', $this->state);
-            $stmt->bindParam(':city', $this->city);
-            $stmt->bindParam(':street', $this->street);
-            $stmt->bindParam(':zip', $this->zip);
-            $stmt->bindParam(':latitude', $this->latitude);
-            $stmt->bindParam(':longitude', $this->longitude);
+        $stmt = $conn->prepare($sql);
 
-            $stmt->execute();
-        }
+        $stmt->bindParam(':facebookEventId', $this->facebookEventId);
+        $stmt->bindParam(':facebookPageId', $this->facebookPageId);
+        $stmt->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
+        $stmt->bindParam(':start_time', $this->startTime);
+        $stmt->bindParam(':end_time', $this->endTime);
+        $stmt->bindParam(':name', $this->name);
+        $stmt->bindParam(':description', $this->description);
+        $stmt->bindParam(':cover', $this->cover);
+        $stmt->bindParam(':place', $this->place);
+        $stmt->bindParam(':state', $this->state);
+        $stmt->bindParam(':city', $this->city);
+        $stmt->bindParam(':street', $this->street);
+        $stmt->bindParam(':zip', $this->zip);
+        $stmt->bindParam(':latitude', $this->latitude);
+        $stmt->bindParam(':longitude', $this->longitude);
+
+        $stmt->execute();
+
+        $stmt->setFetchMode(\PDO::FETCH_ASSOC);
+
+        return $stmt->fetch();
+
     }
 }

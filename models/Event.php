@@ -205,20 +205,20 @@ Class Event extends _base
     protected function eventSave($conn, $createOrUpdate)
     {
         // Cria um novo evento
-        $sqlEventInsert = "INSERT INTO event (name, short_description, create_timestamp, status, agent_id, type, {$this->columnFacebookEventId}, {$this->columnFacebookPageId}, {$this->columnFacebookEventUpdateTime}) VALUES (:name, :short_description, NOW(), 1, :agent_id, 1, :facebookEventId, :facebookPageId, :facebookEventUpdateTime)";
+        $sqlEventInsert = "INSERT INTO event (name, short_description, create_timestamp, status, agent_id, type, {$this->columnFacebookEventId}, {$this->columnFacebookPageId}, {$this->columnFacebookEventUpdateTime}) VALUES ({$this->name}, {$this->description}, NOW(), 1, {$this->userId}, 1, {$this->facebookEventId}, {$this->facebookPageId}, {$this->facebookEventUpdateTime})";
         // Atualiza um existente
         $sqlEventUpdate = "UPDATE event SET  name = :name, short_description = :short_description,  {$this->columnFacebookEventUpdateTime} = :facebookEventUpdateTime  WHERE {$this->columnFacebookEventId} =  :facebookEventId";
 
 
         $event = $conn->prepare($createOrUpdate == 'create' ? $sqlEventInsert : $sqlEventUpdate);
-        $event->bindParam(':name', $this->name);
-        $event->bindParam(':short_description', $this->description);
-        $event->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
+        //$event->bindParam(':name', $this->name);
+        //$event->bindParam(':short_description', $this->description);
+        //$event->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
 
 
-        if($createOrUpdate == 'create') $event->bindParam(':agent_id', $this->userId);
-        if($createOrUpdate == 'create') $event->bindParam(':facebookEventId', $this->facebookEventId);
-        if($createOrUpdate == 'create') $event->bindParam(':facebookPageId', $this->facebookPageId);
+        //if($createOrUpdate == 'create') $event->bindParam(':agent_id', $this->userId);
+        //if($createOrUpdate == 'create') $event->bindParam(':facebookEventId', $this->facebookEventId);
+        //if($createOrUpdate == 'create') $event->bindParam(':facebookPageId', $this->facebookPageId);
 
         $event->execute();
         $event->setFetchMode(\PDO::FETCH_ASSOC);
@@ -242,15 +242,15 @@ Class Event extends _base
 
             if($existPlacePerName == false)
             {
-                // Cria um novo espaço
-                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId}) VALUES (:location, :place, NOW(), 1, :agent_id, 1, true,true, facebook_place_id);";
-                $space = $conn->prepare($sqlSpace);
                 $latLng = "'(".$this->longitude.",".$this->latitude.")'::point";
-                $space->bindParam(':location', $latLng);
-                $space->bindParam(':place', $this->place);
-                $space->bindParam(':agent_id', $this->userId);
-                $space->bindParam(':agent_id', $this->userId);
-                $space->bindParam(':facebook_place_id', $this->facebookPlaceId);
+
+                // Cria um novo espaço
+                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId}) VALUES ({$latLng}, {$this->place}, NOW(), 1, {$this->userId}, 1, true,true, {$this->facebookPlaceId});";
+                $space = $conn->prepare($sqlSpace);
+                //$space->bindParam(':location', $latLng);
+                //$space->bindParam(':place', $this->place);
+                //$space->bindParam(':agent_id', $this->userId);
+                //$space->bindParam(':facebook_place_id', $this->facebookPlaceId);
                 $space->execute();
                 $space->setFetchMode(\PDO::FETCH_ASSOC);
 
@@ -258,10 +258,10 @@ Class Event extends _base
             }
             else
             {
-                $sqlSpaceUpdate = "UPDATE public.space SET {$this->columnFacebookPlaceId} = :facebook_place_id WHERE id = :id";
+                $sqlSpaceUpdate = "UPDATE public.space SET {$this->columnFacebookPlaceId} = {$this->facebookPlaceId} WHERE id = {$existPlacePerName['id']}";
                 $spaceUpdate = $conn->prepare($sqlSpaceUpdate);
-                $spaceUpdate->bindParam(':facebook_place_id', $this->facebookPlaceId);
-                $spaceUpdate->bindParam(':id', $existPlacePerName['id']);
+                //$spaceUpdate->bindParam(':facebook_place_id', $this->facebookPlaceId);
+                //$spaceUpdate->bindParam(':id', $existPlacePerName['id']);
                 $spaceUpdate->execute();
                 $spaceUpdate->setFetchMode(\PDO::FETCH_ASSOC);
 
@@ -284,18 +284,19 @@ Class Event extends _base
     protected function eventOccurrenceSave($conn, $createOrUpdate, $spaceId, $eventId, $eventOccurrenceRule)
     {
         // Cria um novo espaço
-        $sqlEventOccurrenceInsert = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES (:space_id, :event_id, :rule, :starts_on, :ends_on, :starts_at, :ends_at, 'once');";
+        $sqlEventOccurrenceInsert = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES ({$spaceId}, {$eventId}, {json_encode($eventOccurrenceRule)}, {$this->startTime}, {$this->endTime}, {$this->startTime}, {$this->endTime}, 'once');";
         // Atualiza um existente
-        $sqlEventOccurrenceUpdate = "UPDATE public.event_occurrence SET rule = :rule, starts_on = :starts_on, ends_on = :ends_on, starts_at = :starts_at,ends_at = :ends_at WHERE space_id = :space_id AND event_id = :event_id";
+        $sqlEventOccurrenceUpdate = "UPDATE public.event_occurrence SET rule = {json_encode($eventOccurrenceRule)}, starts_on = {$this->startTime}, ends_on = {$this->endTime}, starts_at = {$this->startTime},ends_at = {$this->endTime} WHERE space_id = {$spaceId} AND event_id = {$eventId}";
 
         $eventOccurrence = $conn->prepare($createOrUpdate == 'create' ? $sqlEventOccurrenceInsert : $sqlEventOccurrenceUpdate);
-        $eventOccurrence->bindParam(':space_id', $spaceId);
+        /*$eventOccurrence->bindParam(':space_id', $spaceId);
         $eventOccurrence->bindParam(':event_id', $eventId);
         $eventOccurrence->bindParam(':rule', json_encode($eventOccurrenceRule));
         $eventOccurrence->bindParam(':starts_on', $this->startTime);
         $eventOccurrence->bindParam(':ends_on', $this->endTime);
         $eventOccurrence->bindParam(':starts_at', $this->startTime);
         $eventOccurrence->bindParam(':ends_at', $this->endTime);
+        */
         $eventOccurrence->execute();
         $eventOccurrence->setFetchMode(\PDO::FETCH_ASSOC);
 

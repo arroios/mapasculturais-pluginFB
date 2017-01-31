@@ -82,15 +82,15 @@ Class Page extends _base
               {$this->columnFacebookToken}, 
               {$this->columnFacebookPageName}
               ) VALUES (
-              :facebookPageId, 
-              :facebookToken, 
-              :facebookPageName
+              {$this->facebookPageId}, 
+              {$this->facebookToken}, 
+              {$this->facebookPageName}
               )";
             $stmt = $conn->prepare($sql);
 
-            $stmt->bindParam(':facebookPageId', $this->facebookPageId);
-            $stmt->bindParam(':facebookToken', $this->facebookToken);
-            $stmt->bindParam(':facebookPageName', $this->facebookPageName);
+            //$stmt->bindParam(':facebookPageId', $this->facebookPageId);
+            //$stmt->bindParam(':facebookToken', $this->facebookToken);
+            //$stmt->bindParam(':facebookPageName', $this->facebookPageName);
 
             $stmt->execute();
 

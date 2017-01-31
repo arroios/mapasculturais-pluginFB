@@ -8,6 +8,17 @@ liberar para ser testado a api.
 
 após fazer isso, rede, você vai precisar configurar o host da sua máquina, e depois rodar o seu servidor neste host
 
+##Download 
+É só criar uma pasta chamada plugin, dentro do seu tema, e puxar do git
+```bash
+mkdir plugin
+cd plugin
+git clone https://github.com/arroios/mapasculturais-pluginFB.git
+```
+agora instale o composer, caso não o tenha, após isso é só executar para baixar o vendor
+```bash
+composer update
+```
 
 ## DB Update
 vá até o arquivo db-update.php do seu tema e adicione:

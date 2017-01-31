@@ -36,7 +36,7 @@ Class _base
     public function verify($id, $tableName, $columnId)
     {
         $conn = $this->conn();
-        $query = $conn->prepare("SELECT * FROM {$tableName} WHERE {$columnId} = {$id}");
+        $query = $conn->prepare("SELECT * FROM {$tableName} WHERE {$columnId} = '{$id}'");
         //$query->bindColumn(':columnId', $columnId);
         //$query->bindParam(':id', $id);
 

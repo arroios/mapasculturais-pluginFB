@@ -245,7 +245,10 @@ Class Event extends _base
                 $latLng = "'(".$this->longitude.",".$this->latitude.")'::point";
 
                 // Cria um novo espaço
-                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId}) VALUES ({$latLng}, {$this->place}, NOW(), 1, {$this->userId}, 1, true,true, {$this->facebookPlaceId});";
+                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId})
+                 VALUES 
+                 ({$latLng}, '{$this->place}', NOW(), 1, {$this->userId}, 1, true,true, '{$this->facebookPlaceId}');";
+
                 $space = $conn->prepare($sqlSpace);
                 //$space->bindParam(':location', $latLng);
                 //$space->bindParam(':place', $this->place);
@@ -258,7 +261,7 @@ Class Event extends _base
             }
             else
             {
-                $sqlSpaceUpdate = "UPDATE public.space SET {$this->columnFacebookPlaceId} = {$this->facebookPlaceId} WHERE id = {$existPlacePerName['id']}";
+                $sqlSpaceUpdate = "UPDATE public.space SET {$this->columnFacebookPlaceId} = '{$this->facebookPlaceId}' WHERE id = {$existPlacePerName['id']}";
                 $spaceUpdate = $conn->prepare($sqlSpaceUpdate);
                 //$spaceUpdate->bindParam(':facebook_place_id', $this->facebookPlaceId);
                 //$spaceUpdate->bindParam(':id', $existPlacePerName['id']);
@@ -284,9 +287,9 @@ Class Event extends _base
     protected function eventOccurrenceSave($conn, $createOrUpdate, $spaceId, $eventId, $eventOccurrenceRule)
     {
         // Cria um novo espaço
-        $sqlEventOccurrenceInsert = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES ({$spaceId}, {$eventId}, {json_encode($eventOccurrenceRule)}, {$this->startTime}, {$this->endTime}, {$this->startTime}, {$this->endTime}, 'once');";
+        $sqlEventOccurrenceInsert = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES ({$spaceId}, {$eventId}, '{json_encode($eventOccurrenceRule)}', '{$this->startTime}', '{$this->endTime}', '{$this->startTime}', '{$this->endTime}', 'once');";
         // Atualiza um existente
-        $sqlEventOccurrenceUpdate = "UPDATE public.event_occurrence SET rule = {json_encode($eventOccurrenceRule)}, starts_on = {$this->startTime}, ends_on = {$this->endTime}, starts_at = {$this->startTime},ends_at = {$this->endTime} WHERE space_id = {$spaceId} AND event_id = {$eventId}";
+        $sqlEventOccurrenceUpdate = "UPDATE public.event_occurrence SET rule = {json_encode($eventOccurrenceRule)}, starts_on = '{$this->startTime}', ends_on = '{$this->endTime}', starts_at = '{$this->startTime}',ends_at = '{$this->endTime}' WHERE space_id = {$spaceId} AND event_id = {$eventId}";
 
         $eventOccurrence = $conn->prepare($createOrUpdate == 'create' ? $sqlEventOccurrenceInsert : $sqlEventOccurrenceUpdate);
         /*$eventOccurrence->bindParam(':space_id', $spaceId);

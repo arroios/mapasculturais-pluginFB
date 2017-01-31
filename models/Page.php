@@ -82,9 +82,9 @@ Class Page extends _base
               {$this->columnFacebookToken}, 
               {$this->columnFacebookPageName}
               ) VALUES (
-              {$this->facebookPageId}, 
-              {$this->facebookToken}, 
-              {$this->facebookPageName}
+              '{$this->facebookPageId}', 
+              '{$this->facebookToken}', 
+              '{$this->facebookPageName}'
               )";
             $stmt = $conn->prepare($sql);
 

@@ -202,6 +202,7 @@ Class Event extends _base
         {
             $sqlEvent = "UPDATE event SET  name = '{$this->name}', short_description = '{$this->description}',  {$this->columnFacebookEventUpdateTime} = '{$this->facebookEventUpdateTime}'  WHERE {$this->columnFacebookEventId} =  '{$this->facebookEventId}'";
         }
+        else return $existEvent;
 
 
         $event = $conn->prepare($sqlEvent);
@@ -282,11 +283,11 @@ Class Event extends _base
 
         if($exist == false)
         {
-            $sqlEventOccurrence = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES ({$spaceId}, {$eventId}, '{json_encode($eventOccurrenceRule)}', '{$this->startTime}', '{$this->endTime}', '{$this->startTime}', '{$this->endTime}', 'once');";
+            $sqlEventOccurrence = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES ({$spaceId}, {$eventId}, '{".json_encode($eventOccurrenceRule)."}', '{$this->startTime}', '{$this->endTime}', '{$this->startTime}', '{$this->endTime}', 'once');";
         }
         else
         {
-            $sqlEventOccurrence = "UPDATE public.event_occurrence SET rule = {json_encode($eventOccurrenceRule)}, starts_on = '{$this->startTime}', ends_on = '{$this->endTime}', starts_at = '{$this->startTime}',ends_at = '{$this->endTime}' WHERE space_id = {$spaceId} AND event_id = {$eventId}";
+            $sqlEventOccurrence = "UPDATE public.event_occurrence SET rule = '{".json_encode($eventOccurrenceRule)."}', starts_on = '{$this->startTime}', ends_on = '{$this->endTime}', starts_at = '{$this->startTime}',ends_at = '{$this->endTime}' WHERE space_id = {$spaceId} AND event_id = {$eventId}";
         }
 
 

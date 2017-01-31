@@ -54,7 +54,7 @@ Class ImportEvent extends Facebook
             $this->html = 'success';
         }
 
-        $this->modelEvent = new Event($conf['Event']);
+        $this->modelEvent = new Event($conf['Event'], $this->userId);
         $this->modelPage = new Page($conf['Page']);
     }
 

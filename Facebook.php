@@ -17,7 +17,7 @@ Class Facebook
     private $facebook_permissions = ['email', 'publish_pages', 'manage_pages'];
     private $token = false;
 
-    private $userId;
+    protected $userId;
 
     /**
      * Facebook constructor.

@@ -238,17 +238,36 @@ Class Event extends _base
 
         if($existPlace == false)
         {
-            // Cria um novo espaço
-            $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public) VALUES (:location, :place, NOW(), 1, :agent_id, 1, true,true);";
-            $space = $conn->prepare($sqlSpace);
-            $latLng = "'(".$this->latitude.",".$this->longitude.")'::point";
-            $space->bindParam(':location', $latLng);
-            $space->bindParam(':place', $this->place);
-            $space->bindParam(':agent_id', $this->userId);
-            $space->execute();
-            $space->setFetchMode(\PDO::FETCH_ASSOC);
+            $existPlacePerName = $this->verify($this->place, 'space', 'name');
 
-            return $space->fetch();
+            if($existPlacePerName == false)
+            {
+                // Cria um novo espaço
+                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId}) VALUES (:location, :place, NOW(), 1, :agent_id, 1, true,true, facebook_place_id);";
+                $space = $conn->prepare($sqlSpace);
+                $latLng = "'(".$this->latitude.",".$this->longitude.")'::point";
+                $space->bindParam(':location', $latLng);
+                $space->bindParam(':place', $this->place);
+                $space->bindParam(':agent_id', $this->userId);
+                $space->bindParam(':agent_id', $this->userId);
+                $space->bindParam(':facebook_place_id', $this->facebookPlaceId);
+                $space->execute();
+                $space->setFetchMode(\PDO::FETCH_ASSOC);
+
+                return $space->fetch();
+            }
+            else
+            {
+                $sqlSpaceUpdate = "UPDATE public.space SET {$this->columnFacebookPlaceId} = :facebook_place_id WHERE id = :id";
+                $spaceUpdate = $conn->prepare($sqlSpaceUpdate);
+                $spaceUpdate->bindParam(':facebook_place_id', $this->facebookPlaceId);
+                $spaceUpdate->bindParam(':id', $existPlacePerName['id']);
+                $spaceUpdate->execute();
+                $spaceUpdate->setFetchMode(\PDO::FETCH_ASSOC);
+
+                return $spaceUpdate->fetch();
+            }
+
         }
         else return $existPlace;
 

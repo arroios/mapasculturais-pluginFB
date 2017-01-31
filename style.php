@@ -9,6 +9,7 @@
         background: rgba(0, 0, 0, 0.61);
         bottom: 0;
         top: 0;
+        z-index: 9999999;
     }
 
     #plugin-facebook-form {
@@ -79,7 +80,7 @@
         right: 0;
         border: none;
         cursor: pointer;
-
+        margin: 0;
     }
 
     #plugin-facebook-form-footer a {

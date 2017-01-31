@@ -40,11 +40,11 @@ Class ImportEvent extends Facebook
                 $this->html = 'page_list';
             }
         }
-        else if(isset($_GET['plugin-facebook-action']) && $_GET['plugin-facebook-action'] == 'save' && isset($_POST['pages']) && count($_POST['pages']) > 0)
+        else if(isset($_GET['plugin-facebook-action']) && $_GET['plugin-facebook-action'] == 'save' && isset($_GET['pages']) && count($_GET['pages']) > 0)
         {
             $this->data = [];
 
-            foreach ($_POST['pages'] as $page)
+            foreach ($_GET['pages'] as $page)
             {
                 $arr = json_decode($page, true);
 
@@ -72,12 +72,12 @@ Class ImportEvent extends Facebook
         }
         else if ($this->html == 'page_list')
         {
-            $link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'?plugin-facebook-action=save';
-            $linkOut = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
+            $link = $_SERVER['PATH_INFO'];
             print '<section id="plugin-facebook-section">';
-            print '<form method="POST" id="plugin-facebook-form" name="plugin-facebook-form" action="'.$link.'">';
+            print '<form method="GET" id="plugin-facebook-form" name="plugin-facebook-form" action="'.$link.'">';
+            print '<input type="hidden" value="save" name="plugin-facebook-action" />';
             print '<div id="plugin-facebook-form-header">';
-            print '<h1>Escolha as páginas que deseja sincronizar os eventos</h1>';
+            print '<h3>Escolha as páginas que deseja sincronizar os eventos</h3>';
             print '</div>';
             print '<div id="plugin-facebook-form-body">';
             print '<div id="plugin-facebook-form-body-container">';
@@ -94,7 +94,7 @@ Class ImportEvent extends Facebook
             print '</div>';
             print '<div id="plugin-facebook-form-footer">';
             print '<input type="submit" value="Salvar" name="save" />';
-            print '<a href="'.$linkOut.'">Sair</a>';
+            print '<a href="'.$link.'">Sair</a>';
             print '<div>';
             print '</form>';
             print '</section>';

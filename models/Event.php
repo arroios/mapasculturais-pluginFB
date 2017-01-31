@@ -58,7 +58,7 @@ Class Event extends _base
         if(isset($config['columnFacebookEventId'])) $this->columnFacebookEventId = $config['columnFacebookEventId'];
         if(isset($config['columnFacebookPageId'])) $this->columnFacebookPageId = $config['columnFacebookPageId'];
         if(isset($config['columnFacebookEventUpdateTime'])) $this->columnFacebookEventUpdateTime = $config['columnFacebookEventUpdateTime'];
-        if(isset($config['columnFacebookPlaceId'])) $this->columnFacebookPlaceId = $config['columnFacebookEventPlaceId'];
+        if(isset($config['columnFacebookPlaceId'])) $this->columnFacebookPlaceId = $config['columnFacebookPlaceId'];
         if(isset($config['columnStartTime'])) $this->columnStartTime = $config['columnStartTime'];
         if(isset($config['columnEndTime'])) $this->columnEndTime = $config['columnEndTime'];
         if(isset($config['columnName'])) $this->columnDescription = $config['columnName'];
@@ -148,34 +148,23 @@ Class Event extends _base
      */
     public function save()
     {
-        $createOrUpdate = '';
-        $existEvent = $this->verify($this->facebookEventId, 'event', $this->columnFacebookEventId);
-        if($existEvent == false)
-        {
-            $createOrUpdate = 'create';
-        }
-        else if ($existEvent[$this->columnFacebookEventUpdateTime] != $this->facebookEventUpdateTime)
-        {
-            $createOrUpdate = 'update';
-        }
-
 
         $conn = $this->conn();
 
         // Cria um novo espaço
-        $event = $this->eventSave($conn, $createOrUpdate);
+        $event = $this->eventSave($conn);
 
         // Vincula informações deste evento
         //$eventData = [];
-        //$eventData[] = $this->insertIntoData($conn, $createOrUpdate, 'event_meta', 'facebookEventId', $event['id'], $this->facebookEventId);
-        //$eventData[] = $this->insertIntoData($conn, $createOrUpdate, 'event_meta', 'facebookPageId', $event['id'], $this->facebookPageId);
-        //$eventData[] = $this->insertIntoData($conn, $createOrUpdate, 'event_meta', 'facebookEventUpdateTime', $event['id'], $this->facebookEventUpdateTime);
+        //$eventData[] = $this->insertIntoData($conn, 'event_meta', 'facebookEventId', $event['id'], $this->facebookEventId);
+        //$eventData[] = $this->insertIntoData($conn, 'event_meta', 'facebookPageId', $event['id'], $this->facebookPageId);
+        //$eventData[] = $this->insertIntoData($conn, 'event_meta', 'facebookEventUpdateTime', $event['id'], $this->facebookEventUpdateTime);
 
         // Cria um novo espaço
-        $space = $this->spaceSave($conn, $createOrUpdate);
+        $space = $this->spaceSave($conn);
 
         // Cria um novo espaço
-        $eventOccurrence = $this->eventOccurrenceSave($conn, $createOrUpdate, $space['id'], $event['id'], [
+        $eventOccurrence = $this->eventOccurrenceSave($conn, $space['id'], $event['id'], [
             'spaceId' => $space['id'],
             'startsAt' => date_format(date_create($this->startTime),"H:i"),
             'duration' => 0,
@@ -199,18 +188,23 @@ Class Event extends _base
 
     /**
      * @param $conn
-     * @param $createOrUpdate
      * @return mixed
      */
-    protected function eventSave($conn, $createOrUpdate)
+    protected function eventSave($conn)
     {
-        // Cria um novo evento
-        $sqlEventInsert = "INSERT INTO event (name, short_description, create_timestamp, status, agent_id, type, {$this->columnFacebookEventId}, {$this->columnFacebookPageId}, {$this->columnFacebookEventUpdateTime}) VALUES ('{$this->name}', '{$this->description}', NOW(), 1, {$this->userId}, 1, '{$this->facebookEventId}', '{$this->facebookPageId}', '{$this->facebookEventUpdateTime}')";
-        // Atualiza um existente
-        $sqlEventUpdate = "UPDATE event SET  name = '{$this->name}', short_description = '{$this->description}',  {$this->columnFacebookEventUpdateTime} = '{$this->facebookEventUpdateTime}'  WHERE {$this->columnFacebookEventId} =  '{$this->facebookEventId}'";
+
+        $existEvent = $this->verify($this->facebookEventId, 'event', $this->columnFacebookEventId);
+        if($existEvent == false)
+        {
+            $sqlEvent = "INSERT INTO event (name, short_description, create_timestamp, status, agent_id, type, {$this->columnFacebookEventId}, {$this->columnFacebookPageId}, {$this->columnFacebookEventUpdateTime}) VALUES ('{$this->name}', '{$this->description}', NOW(), 1, {$this->userId}, 1, '{$this->facebookEventId}', '{$this->facebookPageId}', '{$this->facebookEventUpdateTime}')";
+        }
+        else if ($existEvent[$this->columnFacebookEventUpdateTime] != $this->facebookEventUpdateTime)
+        {
+            $sqlEvent = "UPDATE event SET  name = '{$this->name}', short_description = '{$this->description}',  {$this->columnFacebookEventUpdateTime} = '{$this->facebookEventUpdateTime}'  WHERE {$this->columnFacebookEventId} =  '{$this->facebookEventId}'";
+        }
 
 
-        $event = $conn->prepare($createOrUpdate == 'create' ? $sqlEventInsert : $sqlEventUpdate);
+        $event = $conn->prepare($sqlEvent);
         //$event->bindParam(':name', $this->name);
         //$event->bindParam(':short_description', $this->description);
         //$event->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
@@ -223,15 +217,14 @@ Class Event extends _base
         $event->execute();
         $event->setFetchMode(\PDO::FETCH_ASSOC);
 
-        return  $event->fetch();
+        return $existEvent == false ? $event->fetch() : $existEvent ;
     }
 
     /**
      * @param $conn
-     * @param $createOrUpdate
      * @return mixed
      */
-    protected function spaceSave($conn, $createOrUpdate)
+    protected function spaceSave($conn)
     {
 
         $existPlace = $this->verify($this->facebookPlaceId, 'space', $this->columnFacebookPlaceId);
@@ -278,20 +271,26 @@ Class Event extends _base
 
     /**
      * @param $conn
-     * @param $createOrUpdate
      * @param $spaceId
      * @param $eventId
      * @param $eventOccurrenceRule
      * @return mixed
      */
-    protected function eventOccurrenceSave($conn, $createOrUpdate, $spaceId, $eventId, $eventOccurrenceRule)
+    protected function eventOccurrenceSave($conn, $spaceId, $eventId, $eventOccurrenceRule)
     {
-        // Cria um novo espaço
-        $sqlEventOccurrenceInsert = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES ({$spaceId}, {$eventId}, '{json_encode($eventOccurrenceRule)}', '{$this->startTime}', '{$this->endTime}', '{$this->startTime}', '{$this->endTime}', 'once');";
-        // Atualiza um existente
-        $sqlEventOccurrenceUpdate = "UPDATE public.event_occurrence SET rule = {json_encode($eventOccurrenceRule)}, starts_on = '{$this->startTime}', ends_on = '{$this->endTime}', starts_at = '{$this->startTime}',ends_at = '{$this->endTime}' WHERE space_id = {$spaceId} AND event_id = {$eventId}";
+        $exist = $this->verify($eventId, 'event_occurrence', 'event_id');
 
-        $eventOccurrence = $conn->prepare($createOrUpdate == 'create' ? $sqlEventOccurrenceInsert : $sqlEventOccurrenceUpdate);
+        if($exist == false)
+        {
+            $sqlEventOccurrence = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES ({$spaceId}, {$eventId}, '{json_encode($eventOccurrenceRule)}', '{$this->startTime}', '{$this->endTime}', '{$this->startTime}', '{$this->endTime}', 'once');";
+        }
+        else
+        {
+            $sqlEventOccurrence = "UPDATE public.event_occurrence SET rule = {json_encode($eventOccurrenceRule)}, starts_on = '{$this->startTime}', ends_on = '{$this->endTime}', starts_at = '{$this->startTime}',ends_at = '{$this->endTime}' WHERE space_id = {$spaceId} AND event_id = {$eventId}";
+        }
+
+
+        $eventOccurrence = $conn->prepare($sqlEventOccurrence);
         /*$eventOccurrence->bindParam(':space_id', $spaceId);
         $eventOccurrence->bindParam(':event_id', $eventId);
         $eventOccurrence->bindParam(':rule', json_encode($eventOccurrenceRule));

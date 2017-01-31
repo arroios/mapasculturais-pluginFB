@@ -205,9 +205,9 @@ Class Event extends _base
     protected function eventSave($conn, $createOrUpdate)
     {
         // Cria um novo evento
-        $sqlEventInsert = "INSERT INTO event (name, short_description, create_timestamp, status, agent_id, type, {$this->columnFacebookEventId}, {$this->columnFacebookPageId}, {$this->columnFacebookEventUpdateTime}) VALUES ({$this->name}, {$this->description}, NOW(), 1, {$this->userId}, 1, {$this->facebookEventId}, {$this->facebookPageId}, {$this->facebookEventUpdateTime})";
+        $sqlEventInsert = "INSERT INTO event (name, short_description, create_timestamp, status, agent_id, type, {$this->columnFacebookEventId}, {$this->columnFacebookPageId}, {$this->columnFacebookEventUpdateTime}) VALUES ('{$this->name}', '{$this->description}', NOW(), 1, {$this->userId}, 1, '{$this->facebookEventId}', '{$this->facebookPageId}', '{$this->facebookEventUpdateTime}')";
         // Atualiza um existente
-        $sqlEventUpdate = "UPDATE event SET  name = :name, short_description = :short_description,  {$this->columnFacebookEventUpdateTime} = :facebookEventUpdateTime  WHERE {$this->columnFacebookEventId} =  :facebookEventId";
+        $sqlEventUpdate = "UPDATE event SET  name = '{$this->name}', short_description = '{$this->description}',  {$this->columnFacebookEventUpdateTime} = '{$this->facebookEventUpdateTime}'  WHERE {$this->columnFacebookEventId} =  '{$this->facebookEventId}'";
 
 
         $event = $conn->prepare($createOrUpdate == 'create' ? $sqlEventInsert : $sqlEventUpdate);

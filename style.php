@@ -1,6 +1,6 @@
 
 <style>
-    #plugin-facebook-bt {padding: 5px 10px; background: #3b5998; color: #fff; cursor: pointer; font-family: monospace; text-decoration: none }
+    #plugin-facebook-bt {padding: 5px 10px; background: #3b5998; color: #fff; cursor: pointer;text-decoration: none }
 
     #plugin-facebook-section {
         position: fixed;
@@ -21,7 +21,7 @@
         top: 50%;
         margin-left: -200px;
         margin-top: -200px;
-        font-family: monospace;
+
     }
 
     #plugin-facebook-form-header {
@@ -79,7 +79,7 @@
         right: 0;
         border: none;
         cursor: pointer;
-        font-family: monospace;
+
     }
 
     #plugin-facebook-form-footer a {
@@ -89,7 +89,7 @@
         bottom: 0;
         border: none;
         cursor: pointer;
-        font-family: monospace;
+
         background: #dddddd;
         left: 0;
         line-height: 40px;

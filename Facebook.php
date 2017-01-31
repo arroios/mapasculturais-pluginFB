@@ -17,11 +17,14 @@ Class Facebook
     private $facebook_permissions = ['email', 'publish_pages', 'manage_pages'];
     private $token = false;
 
+    private $userId;
+
     /**
      * Facebook constructor.
      * @param $conf
+     * @param $userId
      */
-    function __construct($conf)
+    function __construct($conf, $userId)
     {
         if(!session_id()) {
             session_start();
@@ -29,6 +32,7 @@ Class Facebook
 
         $this->facebook_id = @$conf['facebook_id'];
         $this->facebook_secret = @$conf['facebook_secret'];
+        $this->userId = $userId;
 
         if(isset($conf['facebook_permissions']))
             $this->facebook_permissions =  $conf['facebook_permissions'];
@@ -175,7 +179,8 @@ Class Facebook
 
             $requestAccount = new FacebookRequest($fbApp, $page->facebookToken, 'GET', '/'.$page->facebookPageId.'/events', [
                 'fields' => 'start_time,end_time,name,description,id,updated_time,cover,place',
-                'limit' => '100'
+                'limit' => '100',
+                'since' => time()
             ]);
 
             $data = $this->fb->getClient()->sendRequest($requestAccount)->getDecodedBody()['data'];
@@ -185,7 +190,7 @@ Class Facebook
             foreach ($data as $value)
             {
                 // Instacia um novo evento
-                $__temp = new Event($conf['Event']);
+                $__temp = new Event($conf['Event'], $this->userId);
                 // Carrega os dados no model
                 $__temp->load($value, $page->facebookPageId);
                 // Salva este evento

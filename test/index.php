@@ -1,5 +1,9 @@
 <?php
 
+//'de 30 a 31 de agosto de 2016 \u00e0s 14:00'
+echo date_format(date_create("2017-01-27T18:00:00-0200"),"d \\d\\e F \\d\\e Y \\a\\s H:i");
+die();
+
 require __DIR__ . '/../vendor/autoload.php';
 
 use arroios\plugins\ImportEvent;

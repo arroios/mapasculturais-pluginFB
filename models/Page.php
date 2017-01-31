@@ -47,7 +47,7 @@ Class Page extends _base
      */
     public function getList()
     {
-        $conn = Database::getConnection();
+        $conn = $this->conn();
         $query = $conn->prepare("SELECT * FROM Page");
 
         $query->execute();
@@ -76,7 +76,7 @@ Class Page extends _base
     {
         if($this->verify($this->facebookPageId, $this->tableName, $this->columnFacebookPageId) == false)
         {
-            $conn = Database::getConnection();
+            $conn = $this->conn();
             $sql = "INSERT INTO {$this->tableName} (
               {$this->columnFacebookPageId}, 
               {$this->columnFacebookToken}, 

@@ -10,6 +10,24 @@ use arroios\plugins\Database;
 Class _base
 {
     /**
+     * @param bool $test
+     * @return \PDO
+     */
+    public function conn($test = false)
+    {
+        if($test == true)
+        {
+            $app = \MapasCulturais\App::i();
+            $em = $app->em;
+            return $em->getConnection();
+        }
+        else
+        {
+            return Database::getConnection();
+        }
+
+    }
+    /**
      * @param $id
      * @param $tableName
      * @param $columnId
@@ -17,7 +35,7 @@ Class _base
      */
     public function verify($id, $tableName, $columnId)
     {
-        $conn = Database::getConnection();
+        $conn = $this->conn();
         $query = $conn->prepare("SELECT * FROM {$tableName} WHERE {$columnId} = :id");
         //$query->bindColumn(':columnId', $columnId);
         $query->bindParam(':id', $id);

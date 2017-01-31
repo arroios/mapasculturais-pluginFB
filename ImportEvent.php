@@ -23,12 +23,13 @@ Class ImportEvent extends Facebook
     /**
      * ImportEvent constructor.
      * @param $conf
+     * @param $userId
      */
-    function __construct($conf)
+    function __construct($conf, $userId)
     {
         $this->conf = $conf;
 
-        parent::__construct($conf);
+        parent::__construct($conf, $userId);
 
         if(isset($_GET['plugin-facebook-action']) && $_GET['plugin-facebook-action'] == 'login')
         {

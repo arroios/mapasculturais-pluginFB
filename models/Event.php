@@ -13,6 +13,7 @@ Class Event extends _base
     public $facebookEventId;
     public $facebookPageId;
     public $facebookEventUpdateTime;
+    public $facebookPlaceId;
     public $startTime;
     public $endTime;
     public $name;
@@ -30,6 +31,7 @@ Class Event extends _base
     public $columnFacebookEventId = 'facebookEventId';
     public $columnFacebookPageId = 'facebookPageId';
     public $columnFacebookEventUpdateTime = 'facebookEventUpdateTime';
+    public $columnFacebookPlaceId = 'facebookPlaceId';
     public $columnStartTime = 'startTime';
     public $columnEndTime = 'endTime';
     public $columnName = 'name';
@@ -43,16 +45,20 @@ Class Event extends _base
     public $columnLatitude = 'latitude';
     public $columnLongitude = 'longitude';
 
+    public $userId;
+
     /**
      * Event constructor.
      * @param $config
+     * @param $userId
      */
-    public function __construct($config)
+    public function __construct($config, $userId)
     {
         if(isset($config['tableName'])) $this->tableName = $config['tableName'];
         if(isset($config['columnFacebookEventId'])) $this->columnFacebookEventId = $config['columnFacebookEventId'];
         if(isset($config['columnFacebookPageId'])) $this->columnFacebookPageId = $config['columnFacebookPageId'];
         if(isset($config['columnFacebookEventUpdateTime'])) $this->columnFacebookEventUpdateTime = $config['columnFacebookEventUpdateTime'];
+        if(isset($config['columnFacebookPlaceId'])) $this->columnFacebookPlaceId = $config['columnFacebookEventPlaceId'];
         if(isset($config['columnStartTime'])) $this->columnStartTime = $config['columnStartTime'];
         if(isset($config['columnEndTime'])) $this->columnEndTime = $config['columnEndTime'];
         if(isset($config['columnName'])) $this->columnDescription = $config['columnName'];
@@ -66,6 +72,8 @@ Class Event extends _base
         if(isset($config['columnLatitude'])) $this->columnLatitude = $config['columnLatitude'];
         if(isset($config['columnLongitude'])) $this->columnLongitude = $config['columnLongitude'];
 
+        $this->userId = $userId;
+
     }
 
     /**
@@ -77,6 +85,7 @@ Class Event extends _base
         $this->facebookEventId = @$data['id'];
         $this->facebookPageId = $pageId;
         $this->facebookEventUpdateTime = @$data['updated_time'];
+        $this->facebookPlaceId = @$data['place']['id'];
         $this->startTime = @$data['start_time'];
         $this->endTime = @$data['end_time'];
         $this->name = @$data['name'];
@@ -97,7 +106,7 @@ Class Event extends _base
      */
     public function getListOwnPage($pageId)
     {
-        $conn = Database::getConnection();
+        $conn = $this->conn();
         $query = $conn->prepare("SELECT * FROM {$this->tableName} WHERE {$this->columnFacebookPageId} = :pageId");
         //$query->bindColumn(':columnId', $columnId);
         $query->bindParam(':pageId', $pageId);
@@ -118,6 +127,7 @@ Class Event extends _base
             'facebookEventId' => $this->facebookEventId,
             'columnFacebookPageId' => $this->columnFacebookPageId,
             'facebookEventUpdateTime' => $this->facebookEventUpdateTime,
+            'facebookPlaceId' => $this->facebookPlaceId,
             'startTime' => $this->startTime,
             'endTime' => $this->endTime,
             'name' => $this->name,
@@ -138,129 +148,160 @@ Class Event extends _base
      */
     public function save()
     {
-        $existEvent = $this->verify($this->facebookEventId, $this->tableName, $this->columnFacebookEventId);
+        $createOrUpdate = '';
+        $existEvent = $this->verify($this->facebookEventId, 'event', $this->columnFacebookEventId);
         if($existEvent == false)
         {
-            return $this->create();
+            $createOrUpdate = 'create';
         }
         else if ($existEvent[$this->columnFacebookEventUpdateTime] != $this->facebookEventUpdateTime)
         {
-            return $this->update();
+            $createOrUpdate = 'update';
         }
+
+
+        $conn = $this->conn();
+
+        // Cria um novo espaço
+        $event = $this->eventSave($conn, $createOrUpdate);
+
+        // Vincula informações deste evento
+        //$eventData = [];
+        //$eventData[] = $this->insertIntoData($conn, $createOrUpdate, 'event_meta', 'facebookEventId', $event['id'], $this->facebookEventId);
+        //$eventData[] = $this->insertIntoData($conn, $createOrUpdate, 'event_meta', 'facebookPageId', $event['id'], $this->facebookPageId);
+        //$eventData[] = $this->insertIntoData($conn, $createOrUpdate, 'event_meta', 'facebookEventUpdateTime', $event['id'], $this->facebookEventUpdateTime);
+
+        // Cria um novo espaço
+        $space = $this->spaceSave($conn, $createOrUpdate);
+
+        // Cria um novo espaço
+        $eventOccurrence = $this->eventOccurrenceSave($conn, $createOrUpdate, $space['id'], $event['id'], [
+            'spaceId' => $space['id'],
+            'startsAt' => date_format(date_create($this->startTime),"H:i"),
+            'duration' => 0,
+            'endsAt' => date_format(date_create($this->endTime),"H:i"),
+            'frequency' => 'once',
+            'startsOn' => date_format(date_create($this->startTime),"Y-m-d"),
+            'until' => "",
+            "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
+            "price" => ""
+
+        ]);
+
+        return [
+            'event' => $event,
+            //'eventData' => $eventData,
+            'eventOccurrence' => $eventOccurrence,
+            'space' => $space,
+        ];
+    }
+
+
+    /**
+     * @param $conn
+     * @param $createOrUpdate
+     * @return mixed
+     */
+    protected function eventSave($conn, $createOrUpdate)
+    {
+        // Cria um novo evento
+        $sqlEventInsert = "INSERT INTO event (name, short_description, create_timestamp, status, agent_id, type, {$this->columnFacebookEventId}, {$this->columnFacebookPageId}, {$this->columnFacebookEventUpdateTime}) VALUES (:name, :short_description, NOW(), 1, :agent_id, 1, :facebookEventId, :facebookPageId, :facebookEventUpdateTime)";
+        // Atualiza um existente
+        $sqlEventUpdate = "UPDATE event SET  name = :name, short_description = :short_description,  {$this->columnFacebookEventUpdateTime} = :facebookEventUpdateTime  WHERE {$this->columnFacebookEventId} =  :facebookEventId";
+
+
+        $event = $conn->prepare($createOrUpdate == 'create' ? $sqlEventInsert : $sqlEventUpdate);
+        $event->bindParam(':name', $this->name);
+        $event->bindParam(':short_description', $this->description);
+        $event->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
+
+
+        if($createOrUpdate == 'create') $event->bindParam(':agent_id', $this->userId);
+        if($createOrUpdate == 'create') $event->bindParam(':facebookEventId', $this->facebookEventId);
+        if($createOrUpdate == 'create') $event->bindParam(':facebookPageId', $this->facebookPageId);
+
+        $event->execute();
+        $event->setFetchMode(\PDO::FETCH_ASSOC);
+
+        return  $event->fetch();
     }
 
     /**
+     * @param $conn
+     * @param $createOrUpdate
      * @return mixed
      */
-    public function update()
+    protected function spaceSave($conn, $createOrUpdate)
     {
-        $conn = Database::getConnection();
-        $sql = " UPDATE {$this->tableName} SET
-        {$this->columnFacebookEventUpdateTime} = :facebookEventUpdateTime, 
-        {$this->columnStartTime} = :start_time, 
-        {$this->columnEndTime} = :end_time, 
-        {$this->columnName} = :name, 
-        {$this->columnDescription} = :description,
-        {$this->columnCover} = :cover,
-        {$this->columnPlace} = :place,
-        {$this->columnState} = :state,
-        {$this->columnCity} = :city,
-        {$this->columnStreet} = :street,
-        {$this->columnZip} = :zip,
-        {$this->columnLatitude} = :latitude,
-        {$this->columnLongitude} = :longitude
-        
-        WHERE {$this->columnFacebookEventId} =  :facebookEventId
-        ";
 
-        $stmt = $conn->prepare($sql);
+        $existPlace = $this->verify($this->facebookPlaceId, 'space', $this->columnFacebookPlaceId);
 
-        $stmt->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
-        $stmt->bindParam(':start_time', $this->startTime);
-        $stmt->bindParam(':end_time', $this->endTime);
-        $stmt->bindParam(':name', $this->name);
-        $stmt->bindParam(':description', $this->description);
-        $stmt->bindParam(':cover', $this->cover);
-        $stmt->bindParam(':place', $this->place);
-        $stmt->bindParam(':state', $this->state);
-        $stmt->bindParam(':city', $this->city);
-        $stmt->bindParam(':street', $this->street);
-        $stmt->bindParam(':zip', $this->zip);
-        $stmt->bindParam(':latitude', $this->latitude);
-        $stmt->bindParam(':longitude', $this->longitude);
-        $stmt->bindParam(':facebookEventId', $this->facebookEventId);
+        if($existPlace == false)
+        {
+            // Cria um novo espaço
+            $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public) VALUES (:location, :place, NOW(), 1, :agent_id, 1, true,true);";
+            $space = $conn->prepare($sqlSpace);
+            $latLng = "'(".$this->latitude.",".$this->longitude.")'::point";
+            $space->bindParam(':location', $latLng);
+            $space->bindParam(':place', $this->place);
+            $space->bindParam(':agent_id', $this->userId);
+            $space->execute();
+            $space->setFetchMode(\PDO::FETCH_ASSOC);
 
-        $stmt->execute();
+            return $space->fetch();
+        }
+        else return $existPlace;
 
-        $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-
-        return $stmt->fetch();
     }
 
     /**
+     * @param $conn
+     * @param $createOrUpdate
+     * @param $spaceId
+     * @param $eventId
+     * @param $eventOccurrenceRule
      * @return mixed
      */
-    public function create()
+    protected function eventOccurrenceSave($conn, $createOrUpdate, $spaceId, $eventId, $eventOccurrenceRule)
     {
+        // Cria um novo espaço
+        $sqlEventOccurrenceInsert = "INSERT INTO public.event_occurrence( space_id, event_id,  rule, starts_on, ends_on, starts_at, ends_at, frequency) VALUES (:space_id, :event_id, :rule, :starts_on, :ends_on, :starts_at, :ends_at, 'once');";
+        // Atualiza um existente
+        $sqlEventOccurrenceUpdate = "UPDATE public.event_occurrence SET rule = :rule, starts_on = :starts_on, ends_on = :ends_on, starts_at = :starts_at,ends_at = :ends_at WHERE space_id = :space_id AND event_id = :event_id";
 
-        $conn = Database::getConnection();
-        $sql = "INSERT INTO {$this->tableName} (
-          {$this->columnFacebookEventId}, 
-          {$this->columnFacebookPageId}, 
-          {$this->columnFacebookEventUpdateTime}, 
-          {$this->columnStartTime}, 
-          {$this->columnEndTime}, 
-          {$this->columnName},
-          {$this->columnDescription},
-          {$this->columnCover},
-          {$this->columnPlace},
-          {$this->columnState},
-          {$this->columnCity},
-          {$this->columnStreet},
-          {$this->columnZip},
-          {$this->columnLatitude},
-          {$this->columnLongitude}
-          ) VALUES (
-          :facebookEventId, 
-          :facebookPageId, 
-          :facebookEventUpdateTime, 
-          :start_time, 
-          :end_time, 
-          :name, 
-          :description,
-          :cover,
-          :place,
-          :state,
-          :city,
-          :street,
-          :zip,
-          :latitude,
-          :longitude
-          )";
+        $eventOccurrence = $conn->prepare($createOrUpdate == 'create' ? $sqlEventOccurrenceInsert : $sqlEventOccurrenceUpdate);
+        $eventOccurrence->bindParam(':space_id', $spaceId);
+        $eventOccurrence->bindParam(':event_id', $eventId);
+        $eventOccurrence->bindParam(':rule', json_encode($eventOccurrenceRule));
+        $eventOccurrence->bindParam(':starts_on', $this->startTime);
+        $eventOccurrence->bindParam(':ends_on', $this->endTime);
+        $eventOccurrence->bindParam(':starts_at', $this->startTime);
+        $eventOccurrence->bindParam(':ends_at', $this->endTime);
+        $eventOccurrence->execute();
+        $eventOccurrence->setFetchMode(\PDO::FETCH_ASSOC);
 
-        $stmt = $conn->prepare($sql);
-
-        $stmt->bindParam(':facebookEventId', $this->facebookEventId);
-        $stmt->bindParam(':facebookPageId', $this->facebookPageId);
-        $stmt->bindParam(':facebookEventUpdateTime', $this->facebookEventUpdateTime);
-        $stmt->bindParam(':start_time', $this->startTime);
-        $stmt->bindParam(':end_time', $this->endTime);
-        $stmt->bindParam(':name', $this->name);
-        $stmt->bindParam(':description', $this->description);
-        $stmt->bindParam(':cover', $this->cover);
-        $stmt->bindParam(':place', $this->place);
-        $stmt->bindParam(':state', $this->state);
-        $stmt->bindParam(':city', $this->city);
-        $stmt->bindParam(':street', $this->street);
-        $stmt->bindParam(':zip', $this->zip);
-        $stmt->bindParam(':latitude', $this->latitude);
-        $stmt->bindParam(':longitude', $this->longitude);
-
-        $stmt->execute();
-
-        $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-
-        return $stmt->fetch();
-
+        return $eventOccurrence->fetch();
     }
+
+    /**
+     * @param $conn
+     * @param $table
+     * @param $key
+     * @param $object_id
+     * @param $value
+     * @return mixed
+     */
+    /*protected function insertIntoData($conn, $table, $key, $object_id, $value)
+    {
+        $sqlEventMeta = "INSERT INTO {$table} (key, object_id, value) VALUES (:key, :object_id, :value)";
+        $eventMeta = $conn->prepare($sqlEventMeta);
+        $eventMeta->bindParam(':key', $key);
+        $eventMeta->bindParam(':object_id', $object_id);
+        $eventMeta->bindParam(':value', $value);
+        $eventMeta->execute();
+
+        $eventMeta->setFetchMode(\PDO::FETCH_ASSOC);
+
+        return $eventMeta->fetch();
+    }*/
 }

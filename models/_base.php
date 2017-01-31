@@ -17,13 +17,13 @@ Class _base
     {
         if($test == true)
         {
-            $app = \MapasCulturais\App::i();
-            $em = $app->em;
-            return $em->getConnection();
+            return Database::getConnection();
         }
         else
         {
-            return Database::getConnection();
+            $app = \MapasCulturais\App::i();
+            $em = $app->em;
+            return $em->getConnection();
         }
 
     }

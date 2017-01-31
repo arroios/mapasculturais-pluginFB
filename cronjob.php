@@ -1,0 +1,1 @@
+<?php require __DIR__ . '/vendor/autoload.php'; (new \arroios\plugins\ImportEvent($app->config['arroios.plugin']['import.facebook'], $app->user->id))->cronJob(); ?>

@@ -1,73 +1,103 @@
 # Mapasculturais plugin FB
 Plugin para importar eventos do Facebook para o Mapas Culturais
 
-## Tabela Page
-Escolha um nome que achar mais apropriado
+Antes de tudo, configure o seu Plugin no facebook, e adicione os hosts do seu dominio
+O dominio local para testes tem que ser o "mesmo" que utilizado online ex.:
+www.meusite.com.br você vai precisar utilizar meusite.local ou www.meusite.local, somente assim o facebook vai
+liberar para ser testado a api.
+
+após fazer isso, rede, você vai precisar configurar o host da sua máquina, e depois rodar o seu servidor neste host
+
+
+## DB Update
+vá até o arquivo db-update.php do seu tema e adicione:
 
 ```SQL
- CREATE TABLE IF NOT EXISTS Page (facebookPageId INTEGER PRIMARY KEY, facebookToken TEXT, facebookPageName TEXT)
+ 'arroios_plugin_inmport_facebook' => function() use($conn)
+     {
+         // Cria Tabela para dar suporte a paginas
+         $conn->executeQuery('CREATE TABLE IF NOT EXISTS facebook_page ( facebook_page_id   TEXT, facebook_token  TEXT, facebook_page_name TEXT)');
+ 
+         // da suporte para mais campos na tabela event
+         $conn->executeQuery('
+       
+        ALTER TABLE public.event 
+        ADD COLUMN facebook_event_id TEXT, 
+        ADD COLUMN facebook_page_id TEXT, 
+        ADD COLUMN facebook_event_update_time TEXT; 
+         
+        ');
+ 
+         // da suporte para mais campos na tabela space
+         $conn->executeQuery('
+       
+        ALTER TABLE public.space
+           ADD COLUMN facebook_place_id TEXT;  
+         
+        ');
+     },
 ```
 
-## Tabela Event
-Adicione 3 colunas necessárias para update das informações
+Execute o seguinte arquivo, para entrar as configurações do banco
+```bash
+/mapasculturais/scripts/db-update.sh
+```
 
-- facebookEventId
-- facebookPageId
-- facebookEventUpdateTime
-
-
-## Botão para importar
-Chame ImportEvent, e o configure com as informações do seu APP do facebook, e adicione o nome correto de cada coluna do seu banco
+## Config
+No seu arquivo de configurações, você precisa adicionar um namespace e as configurações do plugin
 
 ```php
-use arroios\plugins\ImportEvent;
+...
+ 
+'namespaces' => array_merge( $config['namespaces'], [
+    'arroios\plugins' => '/vagrant/plugin/mapasculturais-pluginFB'
+]),
+ 
+...
+```
 
-$ImportEvent = new ImportEvent([
-    'facebook_id' => FACEBOOK_APP_ID,
-    'facebook_secret' => FACEBOOK_APP_SECRET,
-    'Event' => // Colunas da tabela de eventos, caso não tenha alguma, adicione
-    [
-        'tableName' => 'Event',
-        'columnFacebookEventId' => 'facebookEventId', // Nova coluna
-        'columnFacebookPageId' => 'facebookPageId', // Nova coluna
-        'columnFacebookEventUpdateTime' => 'facebookEventUpdateTime', // Nova coluna
-        'columnStartTime' => 'startTime',
-        'columnEndTime' => 'endTime',
-        'columnName' => 'name',
-        'columnDescription' => 'description',
-        'columnCover' => 'cover',
-        'columnPlace' => 'place',
-        'columnState' => 'state',
-        'columnCity' => 'city',
-        'columnStreet' => 'street',
-        'columnZip' => 'zip',
-        'columnLatitude' => 'latitude',
-        'columnLongitude' => 'longitude',
-    ],
-    'Page' => // Colunas da tabela de páginas do facebook, caso não tenha alguma, adicione ou crie a tabela
-    [
-        'tableName' => 'Page',
-        'columnFacebookPageId' => 'facebookPageId',
-        'columnFacebookToken' => 'facebookToken',
-        'columnFacebookPageName' => 'facebookPageName',
+```php
+...
+ 
+'arroios.plugin' => [
+    'import.facebook' => [
+        'facebook_id' => SEU_FACEBOOK_APP_ID, //add o seu facebook id
+        'facebook_secret' => SEU_FACEBOOK_APP_SECRET, // add o seu app secret do facebook
+        'Event' =>
+            [
+                'tableName' => 'event',
+                'columnFacebookEventId' => 'facebook_event_id',
+                'columnFacebookPageId' => 'facebook_page_id',
+                'columnFacebookEventUpdateTime' => 'facebook_event_update_time',
+            ],
+        'Page' =>
+            [
+                'tableName' => 'facebook_page',
+                'columnFacebookPageId' => 'facebook_page_id',
+                'columnFacebookToken' => 'facebook_token',
+                'columnFacebookPageName' => 'facebook_page_name',
+            ]
     ]
-]);
+],
+ 
+... 
+```
 
-// Imprime o botão para interação
-$ImportEvent->getHtml();
+## Botão para importar
+Este é o botão para importar os eventos do facebook, adicione ele onde achar mais apropriado
+```php
+<?php (new \arroios\plugins\ImportEvent($app->config['arroios.plugin']['import.facebook'], $app->user->id))->getHtml() ?>
 ```
 
 ## Cron Job
-Caso queira que os eventos se mantenham atualizados, crie um arquivo chamado cronJob.php na raiz e chame-o com a configurações desejada no cron job. 
-
-Chame o mesmo script que anteiormente, com exceção do botão para imprimir, no lugar, chame o cron
+Caso queira que os eventos se mantenham atualizados, crie um arquivo chamado e adicione essas configurações e depois é só chamar pelo cron
 
 ```php
+<?php (new \arroios\plugins\ImportEvent($app->config['arroios.plugin']['import.facebook'], $app->user->id))->cronJob() ?>
+```
 
- /*
- ....
- Mesma configuração padrão acima
- ....
- */
-  $ImportEvent->cronJob();
+Ou somente execute este o arquivo cronjob.php que esta localizado na raiz do plugin
+
+```php
+php  /vagrant/plugins/mapasculturais-pluginFB/cronjob.php
 ```

@@ -27,8 +27,7 @@ vá até o arquivo db-update.php do seu tema e adicione:
  'arroios_plugin_inmport_facebook' => function() use($conn)
      {
          // Cria Tabela para dar suporte a paginas
-         $conn->executeQuery('CREATE TABLE IF NOT EXISTS facebook_page ( facebook_page_id   TEXT, facebook_token  TEXT, facebook_page_name TEXT)');
- 
+         $conn->executeQuery('CREATE TABLE IF NOT EXISTS facebook_page ( facebook_page_id   TEXT, facebook_token  TEXT, facebook_page_name TEXT, user_id TEXT)'); 
          // da suporte para mais campos na tabela event
          $conn->executeQuery('
        
@@ -80,6 +79,7 @@ No seu arquivo de configurações, você precisa adicionar um namespace e as con
                 'columnFacebookEventId' => 'facebook_event_id',
                 'columnFacebookPageId' => 'facebook_page_id',
                 'columnFacebookEventUpdateTime' => 'facebook_event_update_time',
+                'columnFacebookPlaceId' => 'facebook_place_id',
             ],
         'Page' =>
             [

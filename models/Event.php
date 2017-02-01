@@ -28,12 +28,12 @@ Class Event extends _base
     public $longitude;
 
     public $tableName = 'Event';
-    public $columnFacebookEventId = 'facebookEventId';
-    public $columnFacebookPageId = 'facebookPageId';
-    public $columnFacebookEventUpdateTime = 'facebookEventUpdateTime';
-    public $columnFacebookPlaceId = 'facebookPlaceId';
-    public $columnStartTime = 'startTime';
-    public $columnEndTime = 'endTime';
+    public $columnFacebookEventId = 'facebook_event_id';
+    public $columnFacebookPageId = 'facebook_page_id';
+    public $columnFacebookEventUpdateTime = 'facebook_event_update_time';
+    public $columnFacebookPlaceId = 'facebook_place_id';
+    public $columnStartTime = 'start_time';
+    public $columnEndTime = 'end_time';
     public $columnName = 'name';
     public $columnDescription = 'description';
     public $columnCover = 'cover';
@@ -88,10 +88,10 @@ Class Event extends _base
         $this->facebookPlaceId = @$data['place']['id'];
         $this->startTime = @$data['start_time'];
         $this->endTime = @$data['end_time'];
-        $this->name = @$data['name'];
-        $this->description = @$data['description'];
+        $this->name = pg_escape_string(utf8_encode(@$data['name']));
+        $this->description = addslashes(@$data['description']);
         $this->cover = @$data['cover']['source'];
-        $this->place = @$data['place']['name'];
+        $this->place = pg_escape_string(utf8_encode(@$data['place']['name']));
         $this->state = @$data['place']['location']['state'];
         $this->city = @$data['place']['location']['city'];
         $this->street = @$data['place']['location']['street'];
@@ -163,26 +163,25 @@ Class Event extends _base
         // Cria um novo espaço
         $space = $this->spaceSave($conn);
 
-        // Cria um novo espaço
-        $eventOccurrence = $this->eventOccurrenceSave($conn, $space['id'], $event['id'], [
-            'spaceId' => $space['id'],
-            'startsAt' => date_format(date_create($this->startTime),"H:i"),
-            'duration' => 0,
-            'endsAt' => date_format(date_create($this->endTime),"H:i"),
-            'frequency' => 'once',
-            'startsOn' => date_format(date_create($this->startTime),"Y-m-d"),
-            'until' => "",
-            "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
-            "price" => ""
+        if(count($space) > 0)
+        {
+            // Cria um novo espaço
+            $eventOccurrence = $this->eventOccurrenceSave($conn, $space['id'], $event['id'], [
+                'spaceId' => $space['id'],
+                'startsAt' => date_format(date_create($this->startTime),"H:i"),
+                'duration' => 0,
+                'endsAt' => date_format(date_create($this->endTime),"H:i"),
+                'frequency' => 'once',
+                'startsOn' => date_format(date_create($this->startTime),"Y-m-d"),
+                'until' => "",
+                "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
+                "price" => ""
 
-        ]);
+            ]);
+        }
 
-        return [
-            'event' => $event,
-            //'eventData' => $eventData,
-            'eventOccurrence' => $eventOccurrence,
-            'space' => $space,
-        ];
+
+        return true;
     }
 
 

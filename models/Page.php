@@ -13,22 +13,28 @@ Class Page extends _base
     public $facebookPageId;
     public $facebookToken;
     public $facebookPageName;
+    public $userId;
 
     public $tableName = 'Page';
-    public $columnFacebookPageId = 'facebookPageId';
-    public $columnFacebookToken = 'facebookToken';
-    public $columnFacebookPageName = 'facebookPageName';
+    public $columnFacebookPageId = 'facebook_page_id';
+    public $columnFacebookToken = 'facebook_token';
+    public $columnFacebookPageName = 'facebook_page_name';
+    public $columnUserId = 'user_id';
 
     /**
      * Page constructor.
      * @param $config
+     * @param $userId
      */
-    public function __construct($config)
+    public function __construct($config, $userId)
     {
         if(isset($config['tableName'])) $this->tableName = $config['tableName'];
         if(isset($config['columnFacebookPageId'])) $this->columnFacebookPageId = $config['columnFacebookPageId'];
         if(isset($config['columnFacebookToken'])) $this->columnFacebookToken = $config['columnFacebookToken'];
         if(isset($config['columnFacebookPageName'])) $this->columnFacebookPageName = $config['columnFacebookPageName'];
+        if(isset($config['columnUserId'])) $this->columnUserId = $config['columnUserId'];
+
+        $this->userId = $userId;
     }
 
     /**
@@ -39,7 +45,24 @@ Class Page extends _base
     {
         $this->facebookPageId = $target == 'facebook' ? $data['id'] : $data[$this->columnFacebookPageId];
         $this->facebookToken = $target == 'facebook' ? $data['access_token'] : $data[$this->columnFacebookToken];
-        $this->facebookPageName = $target == 'facebook' ? $data['name'] : $data[$this->columnFacebookPageName];
+        $this->facebookPageName = $target == 'facebook' ? pg_escape_string(utf8_encode($data['name'])) : pg_escape_string(utf8_encode($data[$this->columnFacebookPageName]));
+
+        if($this->userId == NULL)
+        {
+            $this->userId = $this->getUserId();
+        }
+    }
+
+    public function getUserId()
+    {
+        $conn = $this->conn();
+        $query = $conn->prepare("SELECT * FROM {$this->tableName} WHERE {$this->columnFacebookPageId} = '{$this->facebookPageId}'");
+
+        $query->execute();
+
+        $query->setFetchMode(\PDO::FETCH_ASSOC);
+
+        return $query->fetch()[$this->columnUserId];
     }
 
     /**
@@ -81,10 +104,12 @@ Class Page extends _base
               {$this->columnFacebookPageId}, 
               {$this->columnFacebookToken}, 
               {$this->columnFacebookPageName}
+              {$this->columnUserId}
               ) VALUES (
               '{$this->facebookPageId}', 
               '{$this->facebookToken}', 
-              '{$this->facebookPageName}'
+              '{$this->facebookPageName}',
+              '{$this->userId}'
               )";
             $stmt = $conn->prepare($sql);
 

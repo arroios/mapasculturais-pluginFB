@@ -142,7 +142,7 @@ Class Facebook
             foreach ($dataAccount as $value)
             {
                 // Instacia uma nova página
-                $page = new Page($conf['Page']);
+                $page = new Page($conf['Page'], $this->userId);
                 // Carrega os dados no model
                 $page->load($value, 'facebook');
                 // Puxa as informações e joga na variável
@@ -171,7 +171,7 @@ Class Facebook
         try
         {
             // Instacia uma nova página
-            $page = new Page($conf['Page']);
+            $page = new Page($conf['Page'], $this->userId);
             $page->conn = $this->conn;
             // Carrega os dados no model
             $page->load($pageData, 'model');
@@ -194,7 +194,7 @@ Class Facebook
             foreach ($data as $value)
             {
                 // Instacia um novo evento
-                $__temp = new Event($conf['Event'], $this->userId);
+                $__temp = new Event($conf['Event'], $page->userId);
                 $__temp->conn = $this->conn;
                 // Carrega os dados no model
                 $__temp->load($value, $page->facebookPageId);

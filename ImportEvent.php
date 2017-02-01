@@ -55,7 +55,7 @@ Class ImportEvent extends Facebook
         }
 
         $this->modelEvent = new Event($conf['Event'], $this->userId);
-        $this->modelPage = new Page($conf['Page']);
+        $this->modelPage = new Page($conf['Page'], $this->userId);
     }
 
 

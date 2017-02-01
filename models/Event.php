@@ -240,7 +240,7 @@ Class Event extends _base
                 // Cria um novo espaço
                 $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId})
                  VALUES 
-                 ({$latLng}, '{$this->place}', NOW(), 1, {$this->userId}, 1, true,true, '{$this->facebookPlaceId}');";
+                 ({$latLng}, '{$this->place}', NOW(), 1, 299, {$this->userId}, true,true, '{$this->facebookPlaceId}');";
 
                 $space = $conn->prepare($sqlSpace);
                 //$space->bindParam(':location', $latLng);

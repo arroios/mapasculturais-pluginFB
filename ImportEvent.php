@@ -29,7 +29,7 @@ Class ImportEvent extends Facebook
     {
         $this->conf = $conf;
 
-        parent::__construct($conf, $userId, $this->conn);
+        parent::__construct($conf, $userId, $conn);
 
         if(isset($_GET['plugin-facebook-action']) && $_GET['plugin-facebook-action'] == 'login')
         {

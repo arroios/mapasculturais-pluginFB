@@ -101,13 +101,8 @@ Este é o botão para importar os eventos do facebook, adicione ele onde achar m
 ```
 
 ## Cron Job
-Caso queira que os eventos se mantenham atualizados, crie um arquivo chamado e adicione essas configurações e depois é só chamar pelo cron
+Caso queira que os eventos se mantenham atualizados, execute este o arquivo cronjob.php que esta localizado na raiz do plugin
 
-```php
-<?php (new \arroios\plugins\ImportEvent($app->config['arroios.plugin']['import.facebook'], $app->user->id))->cronJob() ?>
-```
-
-Ou somente execute este o arquivo cronjob.php que esta localizado na raiz do plugin
 
 ```php
 php  /vagrant/plugins/mapasculturais-pluginFB/cronjob.php

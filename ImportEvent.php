@@ -25,11 +25,11 @@ Class ImportEvent extends Facebook
      * @param $conf
      * @param $userId
      */
-    function __construct($conf, $userId)
+    function __construct($conf, $userId, $conn = false)
     {
         $this->conf = $conf;
 
-        parent::__construct($conf, $userId);
+        parent::__construct($conf, $userId, $this->conn);
 
         if(isset($_GET['plugin-facebook-action']) && $_GET['plugin-facebook-action'] == 'login')
         {
@@ -112,6 +112,7 @@ Class ImportEvent extends Facebook
     public function cronJob()
     {
         $timeLimit = set_time_limit(43200);
+        $this->modelPage->conn = $this->conn;
 
         var_dump($timeLimit);
 

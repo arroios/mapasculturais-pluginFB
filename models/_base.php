@@ -9,15 +9,16 @@ use arroios\plugins\Database;
  */
 Class _base
 {
+    public $conn;
+
     /**
-     * @param bool $test
-     * @return \PDO
+     * @return mixed
      */
-    public function conn($test = false)
+    public function conn()
     {
-        if($test == true)
+        if($this->conn !== false)
         {
-            return Database::getConnection();
+            return $this->conn;
         }
         else
         {

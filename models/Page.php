@@ -48,7 +48,7 @@ Class Page extends _base
     public function getList()
     {
         $conn = $this->conn();
-        $query = $conn->prepare("SELECT * FROM Page");
+        $query = $conn->prepare("SELECT * FROM {$this->columnFacebookPageName}");
 
         $query->execute();
 

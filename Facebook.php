@@ -17,14 +17,16 @@ Class Facebook
     private $facebook_permissions = ['email', 'publish_pages', 'manage_pages'];
     private $token = false;
 
+
     protected $userId;
+    protected $conn;
 
     /**
      * Facebook constructor.
      * @param $conf
      * @param $userId
      */
-    function __construct($conf, $userId)
+    function __construct($conf, $userId, $conn)
     {
         if(!session_id()) {
             session_start();
@@ -33,6 +35,7 @@ Class Facebook
         $this->facebook_id = @$conf['facebook_id'];
         $this->facebook_secret = @$conf['facebook_secret'];
         $this->userId = $userId;
+        $this->conn = $conn;
 
         if(isset($conf['facebook_permissions']))
             $this->facebook_permissions =  $conf['facebook_permissions'];
@@ -169,6 +172,7 @@ Class Facebook
         {
             // Instacia uma nova página
             $page = new Page($conf['Page']);
+            $page->conn = $this->conn;
             // Carrega os dados no model
             $page->load($pageData, 'model');
             // Salva esta página
@@ -191,6 +195,7 @@ Class Facebook
             {
                 // Instacia um novo evento
                 $__temp = new Event($conf['Event'], $this->userId);
+                $__temp->conn = $this->conn;
                 // Carrega os dados no model
                 $__temp->load($value, $page->facebookPageId);
                 // Salva este evento

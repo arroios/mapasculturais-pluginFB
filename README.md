@@ -60,7 +60,7 @@ No seu arquivo de configurações, você precisa adicionar um namespace e as con
 ...
  
 'namespaces' => array_merge( $config['namespaces'], [
-    'arroios\plugins' => '/vagrant/plugin/mapasculturais-pluginFB'
+    'arroios\plugins' => '/plugins/mapasculturais-pluginFB'
 ]),
  
 ...

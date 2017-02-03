@@ -103,7 +103,7 @@ Class Page extends _base
             $sql = "INSERT INTO {$this->tableName} (
               {$this->columnFacebookPageId}, 
               {$this->columnFacebookToken}, 
-              {$this->columnFacebookPageName}
+              {$this->columnFacebookPageName},
               {$this->columnUserId}
               ) VALUES (
               '{$this->facebookPageId}', 

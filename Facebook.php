@@ -199,10 +199,10 @@ Class Facebook
                 // Carrega os dados no model
                 $__temp->load($value, $page->facebookPageId);
                 // Salva este evento
-                $__temp->save();
+                $__save = $__temp->save();
 
                 // Puxa as informações e joga na variável
-                $events[] = $__temp->getInfo();
+                $events[] = $__save;
             }
 
             return [

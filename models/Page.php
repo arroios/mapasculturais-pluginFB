@@ -45,7 +45,7 @@ Class Page extends _base
     {
         $this->facebookPageId = $target == 'facebook' ? $data['id'] : $data[$this->columnFacebookPageId];
         $this->facebookToken = $target == 'facebook' ? $data['access_token'] : $data[$this->columnFacebookToken];
-        $this->facebookPageName = $target == 'facebook' ? pg_escape_string(utf8_encode($data['name'])) : pg_escape_string(utf8_encode($data[$this->columnFacebookPageName]));
+        $this->facebookPageName = $target == 'facebook' ? pg_escape_string($data['name']) : pg_escape_string($data[$this->columnFacebookPageName]);
 
         if($this->userId == NULL)
         {

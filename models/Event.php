@@ -246,6 +246,8 @@ Class Event extends _base
             $fileCrop->execute();
 
         }
+
+        return $eventId;
     }
 
     /**

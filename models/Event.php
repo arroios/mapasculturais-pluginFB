@@ -163,18 +163,20 @@ Class Event extends _base
             if(count($space) > 0)
             {
                 // Cria um novo espaço
-                $eventOccurrence = $this->eventOccurrenceSave($conn, $space['id'], $event['id'], [
-                    'spaceId' => $space['id'],
-                    'startsAt' => date_format(date_create($this->startTime),"H:i"),
-                    'duration' => 0,
-                    'endsAt' => date_format(date_create($this->endTime),"H:i"),
-                    'frequency' => 'once',
-                    'startsOn' => date_format(date_create($this->startTime),"Y-m-d"),
-                    'until' => "",
-                    "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
-                    "price" => ""
+                $eventOccurrence = $this->eventOccurrenceSave($conn,
+                    $space['id'],
+                    $event['id'], [
+                        'spaceId' => $space['id'],
+                        'startsAt' => date_format(date_create($this->startTime),"H:i"),
+                        'duration' => 0,
+                        'endsAt' => date_format(date_create($this->endTime),"H:i"),
+                        'frequency' => 'once',
+                        'startsOn' => date_format(date_create($this->startTime),"Y-m-d"),
+                        'until' => "",
+                        "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
+                        "price" => ""
 
-                ]);
+                    ]);
             }
             return [
                 'space' => $space,
@@ -218,7 +220,7 @@ Class Event extends _base
 
         $eventId =  ($existEvent == false ? $conn->lastInsertId('event_id_seq') : $event->fetch(\PDO::FETCH_ASSOC)['id']) ;
 
-        if($existEvent == false)
+        if($existEvent == false && $this->cover != '')
         {
             $sqlFile = 'INSERT INTO file (md5, mime_type, name, object_type, object_id, create_timestamp, grp) VALUES (:md5, \'image/jpeg\', :name, \'MapasCulturais\Entities\Event\', :object_id, \'NOW()\', \'header\')';
             $fileName = $this->publishImageOriginal($eventId, $this->cover).'.jpg';
@@ -247,7 +249,7 @@ Class Event extends _base
 
         }
 
-        return $eventId;
+        return ['id' => $eventId];
     }
 
     /**

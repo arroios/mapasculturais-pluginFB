@@ -47,6 +47,8 @@ Class Event extends _base
 
     public $userId;
 
+    public $googleMapsApiKey = false;
+
     /**
      * Event constructor.
      * @param $config
@@ -54,23 +56,26 @@ Class Event extends _base
      */
     public function __construct($config, $userId)
     {
-        if(isset($config['tableName'])) $this->tableName = $config['tableName'];
-        if(isset($config['columnFacebookEventId'])) $this->columnFacebookEventId = $config['columnFacebookEventId'];
-        if(isset($config['columnFacebookPageId'])) $this->columnFacebookPageId = $config['columnFacebookPageId'];
-        if(isset($config['columnFacebookEventUpdateTime'])) $this->columnFacebookEventUpdateTime = $config['columnFacebookEventUpdateTime'];
-        if(isset($config['columnFacebookPlaceId'])) $this->columnFacebookPlaceId = $config['columnFacebookPlaceId'];
-        if(isset($config['columnStartTime'])) $this->columnStartTime = $config['columnStartTime'];
-        if(isset($config['columnEndTime'])) $this->columnEndTime = $config['columnEndTime'];
-        if(isset($config['columnName'])) $this->columnDescription = $config['columnName'];
-        if(isset($config['columnDescription'])) $this->columnDescription = $config['columnDescription'];
-        if(isset($config['columnCover'])) $this->columnCover = $config['columnCover'];
-        if(isset($config['columnPlace'])) $this->columnPlace = $config['columnPlace'];
-        if(isset($config['columnState'])) $this->columnState = $config['columnState'];
-        if(isset($config['columnCity'])) $this->columnCity = $config['columnCity'];
-        if(isset($config['columnStreet'])) $this->columnStreet = $config['columnStreet'];
-        if(isset($config['columnZip'])) $this->columnZip = $config['columnZip'];
-        if(isset($config['columnLatitude'])) $this->columnLatitude = $config['columnLatitude'];
-        if(isset($config['columnLongitude'])) $this->columnLongitude = $config['columnLongitude'];
+        if(isset($config['Event']['tableName'])) $this->tableName = $config['Event']['tableName'];
+        if(isset($config['Event']['columnFacebookEventId'])) $this->columnFacebookEventId = $config['Event']['columnFacebookEventId'];
+        if(isset($config['Event']['columnFacebookPageId'])) $this->columnFacebookPageId = $config['Event']['columnFacebookPageId'];
+        if(isset($config['Event']['columnFacebookEventUpdateTime'])) $this->columnFacebookEventUpdateTime = $config['Event']['columnFacebookEventUpdateTime'];
+        if(isset($config['Event']['columnFacebookPlaceId'])) $this->columnFacebookPlaceId = $config['Event']['columnFacebookPlaceId'];
+        if(isset($config['Event']['columnStartTime'])) $this->columnStartTime = $config['Event']['columnStartTime'];
+        if(isset($config['Event']['columnEndTime'])) $this->columnEndTime = $config['Event']['columnEndTime'];
+        if(isset($config['Event']['columnName'])) $this->columnDescription = $config['Event']['columnName'];
+        if(isset($config['Event']['columnDescription'])) $this->columnDescription = $config['Event']['columnDescription'];
+        if(isset($config['Event']['columnCover'])) $this->columnCover = $config['Event']['columnCover'];
+        if(isset($config['Event']['columnPlace'])) $this->columnPlace = $config['Event']['columnPlace'];
+        if(isset($config['Event']['columnState'])) $this->columnState = $config['Event']['columnState'];
+        if(isset($config['Event']['columnCity'])) $this->columnCity = $config['Event']['columnCity'];
+        if(isset($config['Event']['columnStreet'])) $this->columnStreet = $config['Event']['columnStreet'];
+        if(isset($config['Event']['columnZip'])) $this->columnZip = $config['Event']['columnZip'];
+        if(isset($config['Event']['columnLatitude'])) $this->columnLatitude = $config['Event']['columnLatitude'];
+        if(isset($config['Event']['columnLongitude'])) $this->columnLongitude = $config['Event']['columnLongitude'];
+
+
+        if(isset($config['google_maps_api_key'])) $this->googleMapsApiKey = $config['google_maps_api_key'];
 
         $this->userId = $userId;
 
@@ -150,20 +155,17 @@ Class Event extends _base
 
         $conn = $this->conn();
 
-        if($this->latitude != '' || $this->longitude != '')
+        // Cria um novo espaço
+        $space = $this->spaceSave($conn);
+
+        // Cria um novo espaço
+        $event = $this->eventSave($conn);
+
+        if($space != false)
         {
-            // Cria um novo espaço
-            $space = $this->spaceSave($conn);
-
-            // Cria um novo espaço
-            $event = $this->eventSave($conn);
-
-            $eventOccurrence = false;
-
-            if(count($space) > 0)
-            {
-                // Cria um novo espaço
-                $eventOccurrence = $this->eventOccurrenceSave($conn, $space['id'], $event['id'], [
+            $this->eventOccurrenceSave($conn,
+                $space['id'],
+                $event['id'], [
                     'spaceId' => $space['id'],
                     'startsAt' => date_format(date_create($this->startTime),"H:i"),
                     'duration' => 0,
@@ -173,16 +175,15 @@ Class Event extends _base
                     'until' => "",
                     "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
                     "price" => ""
-
                 ]);
-            }
-            return [
-                'space' => $space,
-                'event' => $event,
-                'eventOccurrence' => $eventOccurrence
-            ];
         }
-        else return false;
+
+
+        return [
+            'saved' => false,
+            'message' => 'Sem latitude e longetude',
+            'event' => $this->getInfo()
+        ];
     }
 
 
@@ -216,7 +217,7 @@ Class Event extends _base
 
         $event->execute();
 
-        $eventId =  ($existEvent == false ? $conn->lastInsertId('event_id_seq') : $event->fetch(\PDO::FETCH_ASSOC)['id']) ;
+        $eventId =  ($existEvent == false ? $conn->lastInsertId('event_id_seq') : $existEvent);
 
         if($existEvent == false)
         {
@@ -235,7 +236,7 @@ Class Event extends _base
 
 
             $sqlFile = 'INSERT INTO file (md5, mime_type, name, object_type, object_id, create_timestamp, grp, parent_id) VALUES (:md5, \'image/jpeg\', :name, \'MapasCulturais\Entities\Event\', :object_id, \'NOW()\', \'img:header\', :parent_id)';
-            $fileNameCrop = $this->publishImageCrop($eventId, $fileId, $fileName).'.jpg';
+            $fileNameCrop = $this->publishImageCrop($eventId, $fileId, $fileName, $this->cover).'.jpg';
             $md5FileCrop = md5(microtime());
 
             $fileCrop = $conn->prepare($sqlFile);
@@ -247,7 +248,7 @@ Class Event extends _base
 
         }
 
-        return $eventId;
+        return $this->verify($eventId, 'event', 'id');
     }
 
     /**
@@ -265,6 +266,14 @@ Class Event extends _base
 
             if($existPlacePerName == false)
             {
+                if($this->latitude == '')
+                {
+                    if($this->googleMapsApiKey == false)
+                        return false;
+
+                    $this->getAddressFromGoogle();
+                }
+
                 $latLng = "(".$this->longitude.",".$this->latitude.")";
 
                 // Cria um novo espaço
@@ -285,9 +294,11 @@ Class Event extends _base
                 $this->insertIntoData($conn, 'space_meta', 'En_Municipio', $spaceId, $this->city);
                 $this->insertIntoData($conn, 'space_meta', 'En_Estado', $spaceId, $this->state);
 
-                return ['id' => $spaceId];
+                return $this->verify($spaceId, 'space', 'id');
+
+
             }
-            else
+            else if($this->facebookPlaceId != null)
             {
                 $sqlSpaceUpdate = "UPDATE public.space SET {$this->columnFacebookPlaceId} = :facebook_place_id WHERE id = :id";
                 $spaceUpdate = $conn->prepare($sqlSpaceUpdate);
@@ -296,8 +307,9 @@ Class Event extends _base
                 $spaceUpdate->execute();
                 $spaceUpdate->setFetchMode(\PDO::FETCH_ASSOC);
 
-                return $spaceUpdate->fetch();
+                return $this->verify($this->facebookPlaceId, 'space', 'facebook_place_id');
             }
+            else $existPlacePerName;
 
         }
         else return $existPlace;
@@ -373,12 +385,12 @@ Class Event extends _base
         return $filenameHash;
     }
 
-    protected function publishImageCrop($eventId, $fileId, $fileName )
+    protected function publishImageCrop($eventId, $fileId, $fileName, $link )
     {
         $filenameHash = md5(microtime().$fileName);
         @mkdir($_SERVER['DOCUMENT_ROOT']."/files/event/".$eventId.'/file');
         @mkdir($_SERVER['DOCUMENT_ROOT']."/files/event/".$eventId.'/file/'.$fileId);
-        $image = imagecreatefromjpeg($_SERVER['DOCUMENT_ROOT'].'/files/event/'.$eventId.'/'.$fileName);
+        $image = imagecreatefromjpeg($link);
         $filename = $_SERVER['DOCUMENT_ROOT'].'/files/event/'.$eventId.'/file/'.$fileId.'/'.$filenameHash.'.jpg';
         $thumb_width = 1188;
         $thumb_height = 192;
@@ -414,5 +426,37 @@ Class Event extends _base
         @copy(imagejpeg($thumb, $filename, 100), $filename);
 
         return $filenameHash;
+    }
+
+    protected function getAddressFromGoogle()
+    {
+        $location = str_replace(' ', '+', $this->place);
+        $url = 'https://maps.googleapis.com/maps/api/geocode/json?address='.$location.'&key='.$this->googleMapsApiKey;
+        $json = file_get_contents($url);
+        $obj = json_decode($json);
+
+        if($obj->status == 'OK')
+        {
+            foreach ($obj->results[0]->address_components as $value)
+            {
+                switch ($value->types[0])
+                {
+                    case 'route': $this->street = $value->long_name;
+                        break;
+
+                    case 'administrative_area_level_2': $this->city = $value->long_name;
+                        break;
+
+                    case 'administrative_area_level_1': $this->state = $value->short_name;
+                        break;
+
+                    case 'postal_code': print $this->zip = $value->long_name;
+                        break;
+
+                }
+            }
+            $this->latitude = $obj->results[0]->geometry->location->lat;
+            $this->longitude = $obj->results[0]->geometry->location->lng;
+        }
     }
 }

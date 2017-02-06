@@ -165,7 +165,7 @@ Class Event extends _base
         {
             $this->eventOccurrenceSave($conn,
                 $space['id'],
-                $event['id'], [
+                $event['id'], json_encode([
                     'spaceId' => $space['id'],
                     'startsAt' => date_format(date_create($this->startTime),"H:i"),
                     'duration' => 0,
@@ -175,7 +175,7 @@ Class Event extends _base
                     'until' => "",
                     "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
                     "price" => ""
-                ]);
+                ]));
         }
 
 
@@ -341,7 +341,7 @@ Class Event extends _base
 
         $eventOccurrence->bindParam(':space_id', $spaceId);
         $eventOccurrence->bindParam(':event_id', $eventId);
-        $eventOccurrence->bindParam(':rule', json_encode($eventOccurrenceRule));
+        $eventOccurrence->bindParam(':rule', $eventOccurrenceRule);
         $eventOccurrence->bindParam(':starts_on', $this->startTime);
         $eventOccurrence->bindParam(':ends_on', $this->endTime);
         $eventOccurrence->bindParam(':starts_at', $this->startTime);

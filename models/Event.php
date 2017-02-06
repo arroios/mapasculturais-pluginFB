@@ -163,20 +163,18 @@ Class Event extends _base
             if(count($space) > 0)
             {
                 // Cria um novo espaço
-                $eventOccurrence = $this->eventOccurrenceSave($conn,
-                    $space['id'],
-                    $event['id'], [
-                        'spaceId' => $space['id'],
-                        'startsAt' => date_format(date_create($this->startTime),"H:i"),
-                        'duration' => 0,
-                        'endsAt' => date_format(date_create($this->endTime),"H:i"),
-                        'frequency' => 'once',
-                        'startsOn' => date_format(date_create($this->startTime),"Y-m-d"),
-                        'until' => "",
-                        "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
-                        "price" => ""
+                $eventOccurrence = $this->eventOccurrenceSave($conn, $space['id'], $event['id'], [
+                    'spaceId' => $space['id'],
+                    'startsAt' => date_format(date_create($this->startTime),"H:i"),
+                    'duration' => 0,
+                    'endsAt' => date_format(date_create($this->endTime),"H:i"),
+                    'frequency' => 'once',
+                    'startsOn' => date_format(date_create($this->startTime),"Y-m-d"),
+                    'until' => "",
+                    "description" => date_format(date_create($this->startTime),"d \\d\\e F \\d\\e Y \\a\\s H:i"),
+                    "price" => ""
 
-                    ]);
+                ]);
             }
             return [
                 'space' => $space,
@@ -220,7 +218,7 @@ Class Event extends _base
 
         $eventId =  ($existEvent == false ? $conn->lastInsertId('event_id_seq') : $event->fetch(\PDO::FETCH_ASSOC)['id']) ;
 
-        if($existEvent == false && $this->cover != '')
+        if($existEvent == false)
         {
             $sqlFile = 'INSERT INTO file (md5, mime_type, name, object_type, object_id, create_timestamp, grp) VALUES (:md5, \'image/jpeg\', :name, \'MapasCulturais\Entities\Event\', :object_id, \'NOW()\', \'header\')';
             $fileName = $this->publishImageOriginal($eventId, $this->cover).'.jpg';
@@ -249,7 +247,7 @@ Class Event extends _base
 
         }
 
-        return ['id' => $eventId];
+        return $eventId;
     }
 
     /**
@@ -285,7 +283,7 @@ Class Event extends _base
                 $this->insertIntoData($conn, 'space_meta', 'En_CEP', $spaceId, $this->zip);
                 $this->insertIntoData($conn, 'space_meta', 'En_Nome_Logradouro', $spaceId, $this->street);
                 $this->insertIntoData($conn, 'space_meta', 'En_Municipio', $spaceId, $this->city);
-                $this->insertIntoData($conn, 'space_meta', 'En_Estado', $spaceId, $this->place);
+                $this->insertIntoData($conn, 'space_meta', 'En_Estado', $spaceId, $this->state);
 
                 return ['id' => $spaceId];
             }
@@ -369,8 +367,8 @@ Class Event extends _base
     protected function publishImageOriginal($eventId, $link)
     {
         $filenameHash = md5(microtime().$link);
-        @mkdir("/mapasculturais/src/files/event/".$eventId);
-        @copy($link, '/mapasculturais/src/files/event/'.$eventId.'/'.$filenameHash.'.jpg');
+        @mkdir($_SERVER['DOCUMENT_ROOT']."/files/event/".$eventId);
+        @copy($link, $_SERVER['DOCUMENT_ROOT'].'/files/event/'.$eventId.'/'.$filenameHash.'.jpg');
 
         return $filenameHash;
     }
@@ -378,10 +376,10 @@ Class Event extends _base
     protected function publishImageCrop($eventId, $fileId, $fileName )
     {
         $filenameHash = md5(microtime().$fileName);
-        @mkdir("/mapasculturais/src/files/event/".$eventId.'/file');
-        @mkdir("/mapasculturais/src/files/event/".$eventId.'/file/'.$fileId);
-        $image = imagecreatefromjpeg('/mapasculturais/src/files/event/'.$eventId.'/'.$fileName);
-        $filename = '/mapasculturais/src/files/event/'.$eventId.'/file/'.$fileId.'/'.$filenameHash.'.jpg';
+        @mkdir($_SERVER['DOCUMENT_ROOT']."/files/event/".$eventId.'/file');
+        @mkdir($_SERVER['DOCUMENT_ROOT']."/files/event/".$eventId.'/file/'.$fileId);
+        $image = imagecreatefromjpeg($_SERVER['DOCUMENT_ROOT'].'/files/event/'.$eventId.'/'.$fileName);
+        $filename = $_SERVER['DOCUMENT_ROOT'].'/files/event/'.$eventId.'/file/'.$fileId.'/'.$filenameHash.'.jpg';
         $thumb_width = 1188;
         $thumb_height = 192;
         $width = imagesx($image);

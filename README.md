@@ -1,12 +1,17 @@
 # Mapasculturais plugin FB
 Plugin para importar eventos do Facebook para o Mapas Culturais
 
+
+##Facebook
 Antes de tudo, configure o seu Plugin no facebook, e adicione os hosts do seu dominio
 O dominio local para testes tem que ser o "mesmo" que utilizado online ex.:
 www.meusite.com.br você vai precisar utilizar meusite.local ou www.meusite.local, somente assim o facebook vai
-liberar para ser testado a api.
+permitir o login.
 
 após fazer isso, rede, você vai precisar configurar o host da sua máquina, e depois rodar o seu servidor neste host
+
+Duas pemissões são necessárias no facebook: *publish_pages*, *manage_pages*
+Sem essas permissões, o plugin não funcionará corretamente.
 
 ##Download 
 É só criar uma pasta chamada plugin, dentro do seu tema, e puxar do git

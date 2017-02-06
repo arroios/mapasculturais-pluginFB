@@ -194,7 +194,7 @@ Class Facebook
             foreach ($data as $value)
             {
                 // Instacia um novo evento
-                $__temp = new Event($conf['Event'], $page->userId);
+                $__temp = new Event($conf, $page->userId);
                 $__temp->conn = $this->conn;
                 // Carrega os dados no model
                 $__temp->load($value, $page->facebookPageId);
@@ -206,7 +206,7 @@ Class Facebook
             }
 
             return [
-                'pageId' => $page->facebookPageId,
+                'page' => $page->getInfo(),
                 'events' => $events
             ];
         }

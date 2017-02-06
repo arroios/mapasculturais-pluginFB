@@ -73,6 +73,7 @@ No seu arquivo de configurações, você precisa adicionar um namespace e as con
     'import.facebook' => [
         'facebook_id' => SEU_FACEBOOK_APP_ID, //add o seu facebook id
         'facebook_secret' => SEU_FACEBOOK_APP_SECRET, // add o seu app secret do facebook
+        'google_maps_api_key' => SEU_GOOGLE_MAPS_API_KEY, // caso não queira, eventos sem lat e lng, não entraram com espaço vinculado
         'Event' =>
             [
                 'tableName' => 'event',

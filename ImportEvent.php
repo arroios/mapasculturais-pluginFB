@@ -101,7 +101,7 @@ Class ImportEvent extends Facebook
         }
         else if ($this->html == 'success')
         {
-            print '<h4>Eventos sincronizados com sucesso</h4>';
+            print '<h4 id="plugin-facebook-success">Eventos sincronizados com sucesso</h4>';
         }
     }
 
@@ -113,8 +113,6 @@ Class ImportEvent extends Facebook
     {
         $timeLimit = set_time_limit(43200);
         $this->modelPage->conn = $this->conn;
-
-        var_dump($timeLimit);
 
         print "init cron job \n";
         print "search per Pages \n";

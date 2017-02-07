@@ -113,3 +113,10 @@ Caso queira que os eventos se mantenham atualizados, execute este o arquivo cron
 ```php
 php  /vagrant/plugins/mapasculturais-pluginFB/cronjob.php
 ```
+
+## Telas
+![alt tag](https://raw.githubusercontent.com/arroios/mapasculturais-pluginFB/master/img/button.JPG)
+
+![alt tag](https://raw.githubusercontent.com/arroios/mapasculturais-pluginFB/master/img/fanpages.JPG)
+
+![alt tag](https://raw.githubusercontent.com/arroios/mapasculturais-pluginFB/master/img/success.JPG)

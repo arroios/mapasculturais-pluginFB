@@ -268,7 +268,7 @@ Class Event extends _base
             {
                 if($this->latitude == '')
                 {
-                    if($this->googleMapsApiKey == false)
+                    if($this->googleMapsApiKey == false || $this->place == '')
                         return false;
 
                     $this->getAddressFromGoogle();

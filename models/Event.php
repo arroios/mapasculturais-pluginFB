@@ -277,7 +277,7 @@ Class Event extends _base
                 $latLng = "(".$this->longitude.",".$this->latitude.")";
 
                 // Cria um novo espaço
-                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId}) VALUES (:location::point, :place, NOW(), 1,  1, :agent_id, true,true, :facebook_place_id);";
+                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId}) VALUES (:location::point, :place, NOW(), 1,  299, :agent_id, true,true, :facebook_place_id);";
 
                 $space = $conn->prepare($sqlSpace);
                 $space->bindParam(':location', $latLng);

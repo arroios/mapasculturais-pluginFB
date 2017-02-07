@@ -219,7 +219,7 @@ Class Event extends _base
 
         $eventId =  ($existEvent == false ? $conn->lastInsertId('event_id_seq') : $existEvent);
 
-        if($existEvent == false)
+        if($existEvent == false && $this->cover != '')
         {
             $sqlFile = 'INSERT INTO file (md5, mime_type, name, object_type, object_id, create_timestamp, grp) VALUES (:md5, \'image/jpeg\', :name, \'MapasCulturais\Entities\Event\', :object_id, \'NOW()\', \'header\')';
             $fileName = $this->publishImageOriginal($eventId, $this->cover).'.jpg';
@@ -277,7 +277,7 @@ Class Event extends _base
                 $latLng = "(".$this->longitude.",".$this->latitude.")";
 
                 // Cria um novo espaço
-                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId}) VALUES (:location::point, :place, NOW(), 1,  299, :agent_id, true,true, :facebook_place_id);";
+                $sqlSpace = "INSERT INTO public.space( location, name,create_timestamp, status, type, agent_id, is_verified, public, {$this->columnFacebookPlaceId}) VALUES (:location::point, :place, NOW(), 1,  113, :agent_id, true,true, :facebook_place_id);";
 
                 $space = $conn->prepare($sqlSpace);
                 $space->bindParam(':location', $latLng);

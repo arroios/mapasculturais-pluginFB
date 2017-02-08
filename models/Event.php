@@ -450,7 +450,7 @@ Class Event extends _base
                     case 'administrative_area_level_1': $this->state = $value->short_name;
                         break;
 
-                    case 'postal_code': print $this->zip = $value->long_name;
+                    case 'postal_code': $this->zip = $value->long_name;
                         break;
 
                 }

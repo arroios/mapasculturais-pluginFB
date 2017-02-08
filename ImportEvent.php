@@ -27,6 +27,7 @@ Class ImportEvent extends Facebook
      */
     function __construct($conf, $userId, $conn = false)
     {
+
         $this->conf = $conf;
 
         parent::__construct($conf, $userId, $conn);
@@ -72,7 +73,7 @@ Class ImportEvent extends Facebook
         }
         else if ($this->html == 'page_list')
         {
-            $link = $_SERVER['PATH_INFO'];
+            $link = '/painel/eventos/';
             print '<section id="plugin-facebook-section">';
             print '<form method="GET" id="plugin-facebook-form" name="plugin-facebook-form" action="'.$link.'">';
             print '<input type="hidden" value="save" name="plugin-facebook-action" />';

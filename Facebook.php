@@ -14,7 +14,7 @@ Class Facebook
     private $fb;
     private $facebook_id;
     private $facebook_secret;
-    private $facebook_permissions = ['email', 'publish_pages', 'manage_pages'];
+    private $facebook_permissions = ['email', 'manage_pages'];
     private $token = false;
 
 

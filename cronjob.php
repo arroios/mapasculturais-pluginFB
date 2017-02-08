@@ -1,5 +1,5 @@
 <?php
-require_once "/mapasculturais/src/protected/vendor/autoload.php";
+require_once "/var/www/mapas.teiario.org.br/mapasculturais/src/protected/vendor/autoload.php";
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -11,7 +11,7 @@ define('ACTIVE_THEME_PATH',  THEMES_PATH . 'active/');
 define('PLUGINS_PATH', APPLICATION_PATH.'/plugins/');
 define('LANGUAGES_PATH', APPLICATION_PATH . 'translations/');
 
-$config = include '/mapasculturais/src/protected/application/conf/config.php';
+$config = include '/var/www/mapas.teiario.org.br/mapasculturais/src/protected/application/conf/config.php';
 
 $conn = \Doctrine\DBAL\DriverManager::getConnection(array_merge($config['doctrine.database'], ['driver' => 'pdo_pgsql']), new \Doctrine\DBAL\Configuration());
 

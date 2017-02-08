@@ -14,10 +14,10 @@ Duas pemissões são necessárias no facebook: *publish_pages*, *manage_pages*
 Sem essas permissões, o plugin não funcionará corretamente.
 
 ##Download 
-É só criar uma pasta chamada plugin, dentro do seu tema, e puxar do git
+É só criar uma pasta chamada plugins, dentro do seu tema, e puxar do git
 ```bash
-mkdir plugin
-cd plugin
+mkdir plugins
+cd plugins
 git clone https://github.com/arroios/mapasculturais-pluginFB.git
 ```
 agora instale o composer, caso não o tenha, após isso é só executar para baixar o vendor
@@ -59,7 +59,7 @@ Execute o seguinte arquivo, para entrar as configurações do banco
 ```
 
 ## Config
-No seu arquivo de configurações, você precisa adicionar um namespace e as configurações do plugin
+No seu arquivo de configurações, você precisa adicionar um namespace e as configurações do plugin, o caminho vai depender de como esta configurado o seu servidor
 
 ```php
 ...
@@ -109,9 +109,10 @@ Este é o botão para importar os eventos do facebook, adicione ele onde achar m
 ## Cron Job
 Caso queira que os eventos se mantenham atualizados, execute este o arquivo cronjob.php que esta localizado na raiz do plugin
 
+Exemplo para o path /var/www/mapas.teiario.org.br
 
 ```php
-php  /vagrant/plugins/mapasculturais-pluginFB/cronjob.php
+php  /plugins/mapasculturais-pluginFB/cronjob.php ROOT_DO_SEU_SERVER
 ```
 
 ## Telas

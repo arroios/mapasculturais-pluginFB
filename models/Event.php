@@ -219,6 +219,8 @@ Class Event extends _base
 
         $eventId =  ($existEvent == false ? $conn->lastInsertId('event_id_seq') : $existEvent);
 
+        if($existEvent == false) $this->insertIntoData($conn, 'event_meta', 'site', $eventId, 'http://facebook.com/'.$this->facebookEventId);
+
         if($existEvent == false && $this->cover != '')
         {
             $sqlFile = 'INSERT INTO file (md5, mime_type, name, object_type, object_id, create_timestamp, grp) VALUES (:md5, \'image/jpeg\', :name, \'MapasCulturais\Entities\Event\', :object_id, \'NOW()\', \'header\')';
@@ -450,7 +452,7 @@ Class Event extends _base
                     case 'administrative_area_level_1': $this->state = $value->short_name;
                         break;
 
-                    case 'postal_code': $this->zip = $value->long_name;
+                    case 'postal_code': print $this->zip = $value->long_name;
                         break;
 
                 }

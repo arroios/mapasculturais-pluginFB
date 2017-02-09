@@ -1,5 +1,5 @@
-# Mapasculturais plugin FB
-Plugin para importar eventos do Facebook para o Mapas Culturais
+# MapasCulturais Plugin FB
+Plugin para importar eventos do Facebook para o [Mapas Culturais](https://github.com/hacklabr/mapasculturais)
 
 
 ##Facebook

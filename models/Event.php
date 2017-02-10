@@ -161,9 +161,11 @@ Class Event extends _base
         // Cria um novo espaço
         $event = $this->eventSave($conn);
 
+        $occurrence = false;
+
         if($space != false)
         {
-            $this->eventOccurrenceSave($conn,
+            $occurrence = $this->eventOccurrenceSave($conn,
                 $space['id'],
                 $event['id'], json_encode([
                     'spaceId' => $space['id'],
@@ -180,9 +182,10 @@ Class Event extends _base
 
 
         return [
-            'saved' => false,
-            'message' => 'Sem latitude e longetude',
-            'event' => $this->getInfo()
+            'space' => $space == false ? false : true,
+            'event' => $event == false ? false : true,
+            'occurrence' => $occurrence == false ? false : true,
+            'eventName' => $this->name,
         ];
     }
 
@@ -311,7 +314,7 @@ Class Event extends _base
 
                 return $this->verify($this->facebookPlaceId, 'space', 'facebook_place_id');
             }
-            else $existPlacePerName;
+            else return $existPlacePerName;
 
         }
         else return $existPlace;
@@ -353,7 +356,7 @@ Class Event extends _base
         $eventOccurrence->execute();
         $eventOccurrence->setFetchMode(\PDO::FETCH_ASSOC);
 
-        return $exist == false ? ['id' => $conn->lastInsertId('event_occurrence_id_seq')] : $eventOccurrence->fetch(\PDO::FETCH_ASSOC);
+        return $exist == false ? ['id' => $conn->lastInsertId('event_occurrence_id_seq')] : $this->verify($eventId, 'event_occurrence', 'event_id');
     }
 
     /**
@@ -432,33 +435,40 @@ Class Event extends _base
 
     protected function getAddressFromGoogle()
     {
-        $location = str_replace(' ', '+', $this->place);
-        $url = 'https://maps.googleapis.com/maps/api/geocode/json?address='.$location.'&key='.$this->googleMapsApiKey;
-        $json = file_get_contents($url);
-        $obj = json_decode($json);
-
-        if($obj->status == 'OK')
+        try
         {
-            foreach ($obj->results[0]->address_components as $value)
+            $location = str_replace(' ', '+', $this->place);
+            $url = 'https://maps.googleapis.com/maps/api/geocode/json?address='.$location.'&key='.$this->googleMapsApiKey;
+            $json = file_get_contents($url);
+            $obj = json_decode($json);
+
+            if($obj->status == 'OK')
             {
-                switch ($value->types[0])
+                foreach ($obj->results[0]->address_components as $value)
                 {
-                    case 'route': $this->street = $value->long_name;
-                        break;
+                    switch ($value->types[0])
+                    {
+                        case 'route': $this->street = $value->long_name;
+                            break;
 
-                    case 'administrative_area_level_2': $this->city = $value->long_name;
-                        break;
+                        case 'administrative_area_level_2': $this->city = $value->long_name;
+                            break;
 
-                    case 'administrative_area_level_1': $this->state = $value->short_name;
-                        break;
+                        case 'administrative_area_level_1': $this->state = $value->short_name;
+                            break;
 
-                    case 'postal_code': $this->zip = $value->long_name;
-                        break;
+                        case 'postal_code': $this->zip = $value->long_name;
+                            break;
 
+                    }
                 }
+                $this->latitude = $obj->results[0]->geometry->location->lat;
+                $this->longitude = $obj->results[0]->geometry->location->lng;
             }
-            $this->latitude = $obj->results[0]->geometry->location->lat;
-            $this->longitude = $obj->results[0]->geometry->location->lng;
+        }
+        catch (\Exception $e)
+        {
+            return false;
         }
     }
 }

@@ -27,7 +27,6 @@ Class ImportEvent extends Facebook
      */
     function __construct($conf, $userId, $conn = false)
     {
-
         $this->conf = $conf;
 
         parent::__construct($conf, $userId, $conn);
@@ -103,6 +102,22 @@ Class ImportEvent extends Facebook
         else if ($this->html == 'success')
         {
             print '<h4 id="plugin-facebook-success">Eventos sincronizados com sucesso</h4>';
+
+            foreach ($this->data as $value)
+            {
+                foreach ($value['events'] as $event)
+                {
+                    if($event['event'] == false)
+                        print '<p>O evento <b>'.$event['eventName'].'</b> não foi criado</p>';
+
+                    if($event['space'] == false)
+                        print '<p>O espaço para o evento <b>'.$event['eventName'].'</b> não foi criado</p>';
+
+                    if($event['occurrence'] == false)
+                        print '<p>A ocorrência para o evento <b>'.$event['eventName'].'</b> não foi criada</p>';
+                }
+
+            }
         }
     }
 

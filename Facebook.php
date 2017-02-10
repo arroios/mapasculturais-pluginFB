@@ -109,6 +109,10 @@ Class Facebook
             {
                 return false;
             }
+            catch (FacebookSDKException $e)
+            {
+                return false;
+            }
         }
 
         return [

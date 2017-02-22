@@ -395,7 +395,21 @@ Class Event extends _base
         $filenameHash = md5(microtime().$fileName);
         @mkdir($_SERVER['DOCUMENT_ROOT']."/files/event/".$eventId.'/file');
         @mkdir($_SERVER['DOCUMENT_ROOT']."/files/event/".$eventId.'/file/'.$fileId);
-        $image = imagecreatefromjpeg($link);
+
+        if(exif_imagetype($link) == IMAGETYPE_JPEG)
+        {
+            $image = imagecreatefromjpeg($link);
+        }
+        else if(exif_imagetype($link) == IMAGETYPE_PNG)
+        {
+            $image = imagecreatefrompng($link);
+        }
+        else
+        {
+            return '';
+        }
+
+
         $filename = $_SERVER['DOCUMENT_ROOT'].'/files/event/'.$eventId.'/file/'.$fileId.'/'.$filenameHash.'.jpg';
         $thumb_width = 1188;
         $thumb_height = 192;
